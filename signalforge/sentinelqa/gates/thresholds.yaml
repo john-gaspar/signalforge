@@ -1,0 +1,4 @@
+# Default QA gate thresholds. Tune per-environment.
+run_completion: 0.8
+latency_ms: 5000
+signal_quality: 0.6
