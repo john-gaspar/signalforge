@@ -1,28 +1,39 @@
-from dataclasses import dataclass
-from typing import Any, Mapping
+import json
+from pathlib import Path
+import yaml
+import sys
 
+def main():
+    metrics_path = Path("artifacts/runs")  # choose latest run folder in CI; you’ll pass it in later
+    thresholds = yaml.safe_load(Path("sentinelqa/gates/thresholds.yaml").read_text())
 
-@dataclass
-class GateDecision:
-    passed: bool
-    reason: str
-    score: float
+    # Simplest: find newest metrics.json
+    metrics_files = sorted(metrics_path.glob("**/metrics.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    if not metrics_files:
+        print("No metrics.json found; failing gate.")
+        sys.exit(1)
 
+    metrics = json.loads(metrics_files[0].read_text())
+    failures = []
 
-class Gate:
-    """Simple rule-based gate that evaluates payloads against thresholds."""
+    for key, rule in thresholds.items():
+        if key not in metrics:
+            failures.append(f"Missing metric: {key}")
+            continue
+        val = metrics[key]
+        if "max" in rule and val > rule["max"]:
+            failures.append(f"{key}={val} > max {rule['max']}")
+        if "min" in rule and val < rule["min"]:
+            failures.append(f"{key}={val} < min {rule['min']}")
 
-    def __init__(self, thresholds: Mapping[str, float]):
-        self.thresholds = dict(thresholds)
+    if failures:
+        print("QUALITY GATE FAILED")
+        for f in failures:
+            print(f"- {f}")
+        sys.exit(1)
 
-    def evaluate(self, metrics: Mapping[str, float]) -> GateDecision:
-        missing = [key for key in self.thresholds if key not in metrics]
-        if missing:
-            return GateDecision(False, f"missing metrics: {', '.join(missing)}", score=0.0)
+    print("QUALITY GATE PASSED")
+    sys.exit(0)
 
-        failures = [key for key, limit in self.thresholds.items() if metrics[key] < limit]
-        if failures:
-            reason = ", ".join(f"{key}<{self.thresholds[key]}" for key in failures)
-            return GateDecision(False, f"below threshold: {reason}", score=min(metrics.values()))
-
-        return GateDecision(True, "all thresholds satisfied", score=min(metrics.values()))
+if __name__ == "__main__":
+    main()

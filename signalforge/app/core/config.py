@@ -1,19 +1,13 @@
-from pydantic import BaseSettings, Field
-
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    project_name: str = Field("signalforge", env="SIGNALFORGE_PROJECT_NAME")
-    version: str = Field("0.1.0", env="SIGNALFORGE_VERSION")
-    api_prefix: str = Field("/api", env="SIGNALFORGE_API_PREFIX")
-    database_url: str = Field(
-        "sqlite:///./artifacts/runs/db.sqlite3", env="SIGNALFORGE_DATABASE_URL"
-    )
-    environment: str = Field("local", env="SIGNALFORGE_ENV")
-    port: int = Field(8000, env="PORT")
+    database_url: str
+    redis_url: str
+    artifacts_dir: str = "/code/artifacts"
+    rq_queue_name: str = "signalforge"
 
     class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
+        env_prefix = ""
+        case_sensitive = False
 
 settings = Settings()

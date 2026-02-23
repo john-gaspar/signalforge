@@ -1,23 +1,59 @@
-from typing import Any, Iterable
+import json
+from pathlib import Path
+from app.core.ids import stable_json, sha256_hex
 
+def load_fixture_events(config: dict, run_dir: Path) -> list[dict]:
+    fixtures_dir = Path(config.get("fixtures_dir", "fixtures/tickets"))
+    files = sorted(fixtures_dir.glob("*.json"))  # sorting = determinism
 
-def stage_ingest(ticket: Any) -> Any:
-    """Pretend to ingest data."""
-    ticket = dict(ticket) if isinstance(ticket, dict) else {"ticket": ticket}
-    ticket["ingested"] = True
-    return ticket
+    events = []
+    for f in files:
+        raw = json.loads(f.read_text(encoding="utf-8"))
+        normalized = normalize_ticket(raw)
+        event_id = sha256_hex(stable_json(normalized))[:32]
 
+        ev = {"event_id": event_id, "source": "fixture", "normalized": normalized, "raw_file": str(f)}
+        events.append(ev)
 
-def stage_enrich(ticket: Any) -> Any:
-    """Stub enrichment step."""
-    ticket["enriched"] = True
-    return ticket
+    (run_dir / "events.json").write_text(json.dumps(events, indent=2, sort_keys=True), encoding="utf-8")
+    return events
 
+def normalize_ticket(raw: dict) -> dict:
+    # Minimal normalization; expand later (strip signatures, etc.)
+    return {
+        "customer": raw.get("customer", "unknown"),
+        "subject": (raw.get("subject") or "").strip(),
+        "body": (raw.get("body") or "").strip(),
+        "created_at": raw.get("created_at"),
+    }
 
-def stage_score(ticket: Any) -> Any:
-    """Attach a placeholder quality score."""
-    ticket["score"] = 0.5
-    return ticket
+def cluster_stub(events: list[dict], run_dir: Path) -> list[dict]:
+    # Deterministic trivial clustering by subject hash prefix (placeholder)
+    clusters = {}
+    for ev in events:
+        key = sha256_hex(ev["normalized"]["subject"])[:8]
+        clusters.setdefault(key, []).append(ev["event_id"])
 
+    out = [{"cluster_id": k, "members": v} for k, v in sorted(clusters.items())]
+    (run_dir / "clusters.json").write_text(json.dumps(out, indent=2, sort_keys=True), encoding="utf-8")
+    return out
 
-DEFAULT_STAGES: Iterable = (stage_ingest, stage_enrich, stage_score)
+def summarize_stub(clusters: list[dict], run_dir: Path) -> dict:
+    # Deterministic template summary
+    summary = {
+        "issue": "Potential incident detected",
+        "cluster_count": len(clusters),
+        "evidence": [{"cluster_id": c["cluster_id"], "members": c["members"][:3]} for c in clusters],
+    }
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    return summary
+
+def alert_stub(summary: dict, run_dir: Path) -> dict:
+    decision = "sent" if summary["cluster_count"] >= 1 else "suppressed"
+    payload = {
+        "decision": decision,
+        "channel": "#alerts",
+        "text": f"{summary['issue']} | clusters={summary['cluster_count']}",
+    }
+    (run_dir / "alert.json").write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return payload

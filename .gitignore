@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+.vscode/
+.pytest_cache/
+
+# Pipeline artifacts (keep gitkeep)
+signalforge/artifacts/runs/*
+!signalforge/artifacts/runs/.gitkeep
