@@ -34,6 +34,14 @@ jobs:
       - name: Start services (db + redis)
         run: docker compose up -d postgres redis
 
+      - name: Generate metrics (seed run)
+        run: |
+          docker compose run --rm api python - <<'PY'
+          from app.pipeline.run_pipeline import run_pipeline
+          metrics = run_pipeline("ci_seed", {"fixtures_dir": "fixtures/tickets", "fault_config": {}})
+          print(metrics)
+          PY
+
       - name: Run QA gate
         run: docker compose run --rm api python sentinelqa/gates/gate.py
 
