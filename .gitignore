@@ -8,5 +8,5 @@ __pycache__/
 .pytest_cache/
 
 # Pipeline artifacts (keep gitkeep)
-signalforge/artifacts/runs/*
-!signalforge/artifacts/runs/.gitkeep
+artifacts/runs/*
+!artifacts/runs/.gitkeep
