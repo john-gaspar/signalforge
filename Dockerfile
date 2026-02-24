@@ -6,3 +6,4 @@ RUN pip install --no-cache-dir -r /code/requirements.txt
 
 COPY . /code
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/code
