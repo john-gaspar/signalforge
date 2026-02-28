@@ -20,6 +20,10 @@ Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipel
 8. QA gate (local venv): `python3 sentinelqa/gates/gate.py`.
    - Containerized gate (CI parity): `docker compose run --rm api python sentinelqa/gates/gate.py`.
 
+## Migrations (Alembic)
+- Upgrade to latest: `docker compose run --rm api alembic upgrade head`
+- Create revision (autogenerate): `docker compose run --rm api alembic revision --autogenerate -m "..."`
+
 ## Environment variables
 - `DATABASE_URL` (e.g., `postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge`)
 - `REDIS_URL` (e.g., `redis://redis:6379/0`)
