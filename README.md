@@ -134,6 +134,7 @@ The focus is operational discipline across:
 ## Benchmark Gate
 - Run benchmark: `python -m sentinelqa.bench.run --base-url http://api:8000 --fixtures fixtures/golden --out artifacts/bench/latest.json`
 - Check against baseline: `python -m sentinelqa.gates.bench_gate`
+- Accuracy is computed via expected event_ids in `fixtures/golden/expectations.json`; baseline requires F1 to stay above `min_f1` (see `sentinelqa/baselines/bench_baseline.json`).
 
 ## Preflight
 - `./scripts/preflight.sh` (compileall + optional actionlint/ruff)

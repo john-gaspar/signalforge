@@ -1,5 +1,9 @@
 {
   "min_events": 2,
   "min_clusters": 1,
-  "required_keys": ["events", "clusters", "alerts_sent", "latency_ms"]
+  "required_keys": ["events", "clusters", "alerts_sent", "latency_ms"],
+  "event_ids": [
+    "d776f0478e781ee02bb89ef5e13aa32b",
+    "705c3ffe74843712e4fbff708436b080"
+  ]
 }

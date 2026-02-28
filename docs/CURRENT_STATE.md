@@ -39,6 +39,7 @@ Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`
 - `/runs/replay` — enqueue deterministic pipeline run; idempotent by config hash.
 - `/runs/{run_id}` — retrieve run state/metrics.
 - `/health` — readiness/liveness (does not touch DB).
+- Benchmark accuracy — event-level precision/recall/F1 vs expected event_ids in `fixtures/golden/expectations.json`; enforced via benchmark gate baseline.
 
 ## Testing
 - Pytest suite covers API replay, stub stages, migration smoke/drift checks, health endpoint, and startup schema helper.
@@ -46,7 +47,6 @@ Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`
 
 ## Known Gaps / Planned
 - Drift detection (Data Quality) — not implemented.
-- Benchmarking gates (golden set, F1/p95 tracking) — not implemented.
 - Graph/Neo4j integration — not implemented.
 - Load testing scaffold — not implemented.
 - Observability: logging/metrics minimal; tracing absent.

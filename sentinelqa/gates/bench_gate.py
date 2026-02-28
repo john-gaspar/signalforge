@@ -28,6 +28,12 @@ def compare(baseline: dict, current: dict) -> list[str]:
     max_p95 = baseline.get("max_p95_latency_ms")
     if max_p95 is not None and cur_p95 > max_p95:
         errors.append(f"p95_latency_ms current={cur_p95} baseline<={max_p95}")
+
+    cur_f1 = current.get("accuracy", {}).get("f1", 0.0)
+    min_f1 = float(os.environ.get("BENCH_F1_MIN", baseline.get("min_f1", 0.0)))
+    if cur_f1 < min_f1:
+        errors.append(f"f1 current={cur_f1:.4f} baseline>={min_f1:.4f}")
+
     return errors
 
 
@@ -37,6 +43,7 @@ def main() -> None:
     result_path = Path(os.environ.get("BENCH_RESULT_PATH", root / "artifacts/bench/latest.json"))
     fixtures_path = Path(os.environ.get("BENCH_FIXTURES", root / "fixtures/golden"))
     base_url = os.environ.get("BENCH_BASE_URL", "http://api:8000")
+    mode = os.environ.get("BENCH_MODE", "fail")
 
     if not result_path.exists():
         summary = run_benchmark(base_url, fixtures_path, result_path)
@@ -47,10 +54,14 @@ def main() -> None:
 
     errors = compare(baseline, current)
     if errors:
-        print("BENCHMARK GATE FAILED")
+        status = "WARN" if mode == "warn" else "FAIL"
+        print(f"BENCHMARK GATE {status}")
         for e in errors:
             print(f"- {e}")
-        sys.exit(1)
+        if mode == "fail":
+            sys.exit(1)
+        else:
+            sys.exit(0)
 
     print("BENCHMARK GATE PASSED")
     sys.exit(0)

@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 
 import httpx
+from sentinelqa.bench.score import load_expectations, load_produced, compute_prf
 
 
 def post_replay(base_url: str, fixtures_dir: str) -> str:
@@ -76,11 +77,13 @@ def run_benchmark(base_url: str, fixtures: Path, out_path: Path) -> dict:
 
     artifacts_dir = Path(os.getenv("ARTIFACTS_DIR", "artifacts"))
     events, metrics = load_artifacts(artifacts_dir, run_id)
-    expectations = json.loads((fixtures / "expectations.json").read_text())
+    expectations = load_expectations(fixtures)
 
     summary = compute_summary(events, metrics)
     summary["run_id"] = run_id
     summary["errors"] = evaluate(expectations, events, metrics)
+    prf = compute_prf(expectations.get("event_ids", []), load_produced(artifacts_dir, run_id))
+    summary["accuracy"] = prf
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(summary, indent=2, sort_keys=True))
