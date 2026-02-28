@@ -21,8 +21,8 @@ CI integration — ✅ Implemented
 # Database
 
 SQLAlchemy models (Run, Event) — ✅ Implemented  
-Alembic migrations — 🔜 In Progress  
-create_all removal/guard — 🔜 Planned  
+Alembic migrations — ✅ Implemented  
+create_all removal/guard — ✅ Implemented  
 
 ---
 
