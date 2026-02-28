@@ -65,8 +65,11 @@ jobs:
       - name: Start api + worker
         run: docker compose up -d api worker
 
+      - name: Wait for api health
+        run: docker compose run --rm api python -m sentinelqa.ci.wait_http --url http://api:8000/health --timeout 60
+
       - name: Seed run via API
-        run: docker compose run --rm api python -m sentinelqa.ci.seed_run
+        run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
 
       - name: Data Quality gate
         run: docker compose run --rm api python -m sentinelqa.dq.run
@@ -88,4 +91,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run actionlint
-        uses: rhysd/actionlint@v1
+        run: docker run --rm -v "${{ github.workspace }}":/repo -w /repo rhysd/actionlint:1.7.0

@@ -9,6 +9,7 @@ Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipel
 4. Run API + worker (separate terminals):
    - API: `docker compose up api`
    - Worker: `docker compose up worker`
+   (containers auto-run `alembic upgrade head` on startup)
 5. Add fixtures in `fixtures/tickets/*.json`.
 6. Trigger a replay run:
    ```bash
@@ -25,6 +26,7 @@ Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipel
 ## Migrations (Alembic)
 - Upgrade to latest: `docker compose run --rm api alembic upgrade head`
 - Create revision (autogenerate): `docker compose run --rm api alembic revision --autogenerate -m "..."`
+ - Note: api/worker containers run `alembic upgrade head` on startup for convenience.
 
 ## Data Quality Gate
 - Run locally: `python -m sentinelqa.dq.run`

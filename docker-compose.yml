@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    command: /code/scripts/start_api.sh
     env_file: .env
     volumes:
       - ./:/code
@@ -10,10 +10,16 @@ services:
     depends_on:
       - postgres
       - redis
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys;urllib.request.urlopen('http://localhost:8000/health',timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
 
   worker:
     build: .
-    command: rq worker signalforge --with-scheduler
+    command: /code/scripts/start_worker.sh
     env_file: .env
     volumes:
       - ./:/code

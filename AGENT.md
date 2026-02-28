@@ -201,3 +201,10 @@ A feature is complete only when:
 - No regression risk introduced
 
 If any of these are missing, it is not done.
+
+# Documentation
+
+Error budget policy (docs/ERROR_BUDGET_POLICY.md) — ✅ Documented  
+Run lifecycle state machine (docs/RUN_STATE_MACHINE.md) — ✅ Documented  
+
+This file must be updated whenever a planned item becomes implemented.
