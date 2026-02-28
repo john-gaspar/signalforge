@@ -1,0 +1,6 @@
+{
+  "customer": "Globex",
+  "subject": "Password reset emails delayed",
+  "body": "Users report password reset emails arriving after 20 minutes.",
+  "created_at": "2026-02-23T11:00:00Z"
+}

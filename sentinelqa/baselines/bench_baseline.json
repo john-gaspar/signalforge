@@ -1,0 +1,4 @@
+{
+  "min_pass_rate": 1.0,
+  "max_p95_latency_ms": 2000
+}

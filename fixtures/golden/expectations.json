@@ -1,0 +1,5 @@
+{
+  "min_events": 2,
+  "min_clusters": 1,
+  "required_keys": ["events", "clusters", "alerts_sent", "latency_ms"]
+}

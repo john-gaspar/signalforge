@@ -131,6 +131,10 @@ The focus is operational discipline across:
 ## Data Quality Gate
 - Run locally: `python -m sentinelqa.dq.run`
 
+## Benchmark Gate
+- Run benchmark: `python -m sentinelqa.bench.run --base-url http://api:8000 --fixtures fixtures/golden --out artifacts/bench/latest.json`
+- Check against baseline: `python -m sentinelqa.gates.bench_gate`
+
 ## Preflight
 - `./scripts/preflight.sh` (compileall + optional actionlint/ruff)
 

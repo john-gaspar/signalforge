@@ -26,12 +26,13 @@ Source of truth for implemented vs planned capabilities. See docs/09_IMPLEMENTAT
 2) Start Postgres/Redis
 3) Run migrations
 4) Start api + worker
-5) Wait for api health
+5) Wait for api health (pure-Python wait, 180s timeout)
 6) Seed run via API (http://api:8000/runs/replay)
-7) Data Quality gate
-8) Metrics gate
-9) Pytest
-10) Down services
+7) Benchmark run + gate (golden fixtures vs baseline)
+8) Data Quality gate
+9) Metrics gate
+10) Pytest
+11) Down services
 Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`.
 
 ## Endpoints
@@ -51,6 +52,7 @@ Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`
 - Observability: logging/metrics minimal; tracing absent.
 
 ## Developer Notes
-- Use `python -m sentinelqa.ci.seed_run --base-url http://api:8000` (in compose) or `http://localhost:8000` (host) to seed a run.
+- Use `python -m sentinelqa.ci.seed_run --base-url http://api:8000` (in compose) or `http://localhost:8000` (host) to seed a run. The wait logic is pure Python and no longer depends on curl.
+- Run benchmark locally: `python -m sentinelqa.bench.run --base-url http://api:8000 --fixtures fixtures/golden --out artifacts/bench/latest.json` then `python -m sentinelqa.gates.bench_gate`.
 - `docker compose up -d api worker` is schema-safe because migrations run on startup.
 - Health and OpenAPI are stable once the container is up; no uvicorn reload in compose unless `UVICORN_RELOAD=1` is set.

@@ -1,0 +1,6 @@
+{
+  "customer": "Acme Corp",
+  "subject": "Login failures for EU users",
+  "body": "Several EU-based users report receiving 500 errors during login since 10:05 UTC.",
+  "created_at": "2026-02-23T10:15:00Z"
+}

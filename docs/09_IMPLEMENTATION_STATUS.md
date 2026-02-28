@@ -52,9 +52,10 @@ Drift detection — ⛔ Not implemented
 
 # Benchmarking
 
-Golden dataset — ⛔ Not implemented  
+Golden dataset — ✅ Implemented  
+Benchmark gate — ✅ Implemented  
 F1 regression tracking — ⛔ Not implemented  
-Latency distribution tracking — ⚠️ Partial (latency_ms exists)  
+Latency distribution tracking — ✅ Implemented (p50/p95 in benchmark)  
 
 ---
 
