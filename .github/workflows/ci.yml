@@ -35,6 +35,28 @@ jobs:
       - name: Start services (db + redis)
         run: docker compose up -d postgres redis
 
+      - name: Wait for postgres:5432
+        env:
+          DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
+        run: |
+          docker compose run --rm api python - <<'PY'
+          import socket, time, sys
+
+          host, port = "postgres", 5432
+          deadline = time.time() + 60
+
+          while time.time() < deadline:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+              s.settimeout(1)
+              try:
+                s.connect((host, port))
+                sys.exit(0)
+              except OSError:
+                time.sleep(1)
+
+          sys.exit("Postgres not ready after 60s")
+          PY
+
       - name: Run migrations
         env:
           DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
