@@ -1,4 +1,4 @@
-# SignalForge
+# SignalForge — AI Reliability System
 
 ## System Architecture
 
@@ -33,6 +33,13 @@ flowchart LR
         J[Baseline Store]
     end
 
+    subgraph SLO Domains
+        L[Availability]
+        M[Performance]
+        N[Quality]
+        O[Cost]
+    end
+
     subgraph CI
         K[CI Gate<br/>FAIL / WARN / PASS]
     end
@@ -51,7 +58,15 @@ flowchart LR
     G --> I
     J --> I
 
-    I --> K
+    I --> L
+    I --> M
+    I --> N
+    I --> O
+
+    L --> K
+    M --> K
+    N --> K
+    O --> K
 ```
 
 ### Architectural Principles
@@ -62,8 +77,30 @@ flowchart LR
 - SentinelQA enforces baseline-controlled regression  
 - CI blocks FAIL-level reliability violations  
 
+---
 
-Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipeline stages plus a QA gate script.
+## Overview
+
+SignalForge is a reliability-first AI system designed to enforce:
+
+- Baseline-controlled regression
+- Deterministic replay
+- Error-budget governance
+- Explicit lifecycle semantics
+- CI-enforced reliability guarantees
+
+This repository demonstrates ownership of AI system reliability — not just automation.
+
+The focus is operational discipline across:
+
+- Schema integrity
+- Structural invariants
+- Drift detection
+- Latency regression
+- Cost control
+- Failure isolation
+
+---
 
 ## Quick start
 1. Copy env: `cp .env.example .env` and fill values.
