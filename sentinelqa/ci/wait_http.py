@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
-import subprocess
 import sys
 import time
 import urllib.error
@@ -10,27 +8,28 @@ import urllib.request
 
 
 def wait_http(url: str, timeout: int = 60) -> None:
-    deadline = time.time() + timeout
-    last_error = None
-    while time.time() < deadline:
+    start = time.time()
+    next_log = 5
+    last_error: str | Exception | None = None
+
+    while True:
+        elapsed = time.time() - start
+        if elapsed > timeout:
+            raise RuntimeError(f"{url} not ready after {int(elapsed)}s (last error: {last_error})")
+
         try:
             with urllib.request.urlopen(url, timeout=2) as resp:
                 if 200 <= resp.status < 300:
                     return
-        except urllib.error.URLError as exc:
+                last_error = f"HTTP {resp.status}"
+        except (urllib.error.URLError, ConnectionRefusedError, TimeoutError, Exception) as exc:
             last_error = exc
-            # fallback to curl when permission errors occur
-            result = subprocess.run(
-                ["curl", "--ipv4", "--noproxy", "*", "-s", "-o", "/dev/null", "-w", "%{http_code}", url],
-                capture_output=True,
-            )
-            if result.returncode == 0 and result.stdout.startswith(b"2"):
-                return
-            last_error = result.stdout.decode()
-        except Exception as exc:
-            last_error = exc
+
+        if elapsed >= next_log:
+            print(f"Waiting for {url} (elapsed {int(elapsed)}s) ...")
+            next_log += 5
+
         time.sleep(1)
-    sys.exit(f"wait_http: {url} not ready after {timeout}s (last error: {last_error})")
 
 
 def main() -> None:
@@ -38,8 +37,12 @@ def main() -> None:
     parser.add_argument("--url", required=True)
     parser.add_argument("--timeout", type=int, default=60)
     args = parser.parse_args()
-    wait_http(args.url, args.timeout)
-    print(f"{args.url} is ready")
+    try:
+        wait_http(args.url, args.timeout)
+        print(f"{args.url} is ready")
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
