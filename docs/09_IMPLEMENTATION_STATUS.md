@@ -44,8 +44,8 @@ Graph invariants tests — ⛔ Not implemented
 
 # Data Quality
 
-Schema validation (Pydantic) — ⛔ Not implemented  
-Structural invariants — ⛔ Not implemented  
+Schema validation (Pydantic) — ✅ Implemented  
+Structural invariants — ✅ Implemented  
 Drift detection — ⛔ Not implemented  
 
 ---

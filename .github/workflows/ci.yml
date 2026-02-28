@@ -19,8 +19,8 @@ jobs:
       - name: Write .env from GitHub secrets
         run: |
           cat > .env <<'EOF'
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          REDIS_URL=${{ secrets.REDIS_URL }}
+          DATABASE_URL=postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
+          REDIS_URL=redis://redis:6379/0
           ARTIFACTS_DIR=${{ secrets.ARTIFACTS_DIR }}
           RQ_QUEUE_NAME=${{ secrets.RQ_QUEUE_NAME }}
           EOF
@@ -62,13 +62,55 @@ jobs:
           DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
         run: docker compose run --rm api alembic upgrade head
 
-      - name: Generate metrics (seed run)
+      - name: Start api + worker
+        run: docker compose up -d api worker
+
+      - name: Seed run via API
         run: |
-          docker compose run --rm api python - <<'PY'
-          from app.pipeline.run_pipeline import run_pipeline
-          metrics = run_pipeline("ci_seed", {"fixtures_dir": "fixtures/tickets", "fault_config": {}})
-          print(metrics)
-          PY
+          python - <<'PY'
+import json, time, sys, urllib.request, urllib.error
+
+payload = json.dumps({"fixtures_dir":"fixtures/tickets","fault_config":{}}).encode()
+
+def post_run():
+    for attempt in range(60):
+        try:
+            req = urllib.request.Request(
+                "http://localhost:8000/runs/replay",
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                data = json.load(resp)
+                return data["run_id"]
+        except Exception:
+            time.sleep(1)
+    sys.exit("API not reachable or replay failed after 60s")
+
+def wait_run(run_id: str):
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(f"http://localhost:8000/runs/{run_id}", timeout=2) as resp:
+                data = json.load(resp)
+            status = data.get("status")
+            if status == "succeeded":
+                print(f\"Seed run {run_id} succeeded\")
+                return
+            if status == "failed":
+                sys.exit(f\"Seed run {run_id} failed\")
+        except Exception:
+            pass
+        time.sleep(1)
+    sys.exit(f\"Seed run {run_id} did not complete within timeout\")
+
+run_id = post_run()
+wait_run(run_id)
+PY
+
+      - name: Data Quality gate
+        run: docker compose run --rm api python -m sentinelqa.dq.run
 
       - name: Run QA gate
         run: docker compose run --rm api python sentinelqa/gates/gate.py
