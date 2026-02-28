@@ -29,6 +29,9 @@ Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipel
 ## Data Quality Gate
 - Run locally: `python -m sentinelqa.dq.run`
 
+## Preflight
+- `./scripts/preflight.sh` (compileall + optional actionlint/ruff)
+
 ## Environment variables
 - `DATABASE_URL` (e.g., `postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge`)
 - `REDIS_URL` (e.g., `redis://redis:6379/0`)

@@ -66,48 +66,7 @@ jobs:
         run: docker compose up -d api worker
 
       - name: Seed run via API
-        run: |
-          python - <<'PY'
-import json, time, sys, urllib.request, urllib.error
-
-payload = json.dumps({"fixtures_dir":"fixtures/tickets","fault_config":{}}).encode()
-
-def post_run():
-    for attempt in range(60):
-        try:
-            req = urllib.request.Request(
-                "http://localhost:8000/runs/replay",
-                data=payload,
-                headers={"Content-Type": "application/json"},
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=2) as resp:
-                data = json.load(resp)
-                return data["run_id"]
-        except Exception:
-            time.sleep(1)
-    sys.exit("API not reachable or replay failed after 60s")
-
-def wait_run(run_id: str):
-    deadline = time.time() + 60
-    while time.time() < deadline:
-        try:
-            with urllib.request.urlopen(f"http://localhost:8000/runs/{run_id}", timeout=2) as resp:
-                data = json.load(resp)
-            status = data.get("status")
-            if status == "succeeded":
-                print(f\"Seed run {run_id} succeeded\")
-                return
-            if status == "failed":
-                sys.exit(f\"Seed run {run_id} failed\")
-        except Exception:
-            pass
-        time.sleep(1)
-    sys.exit(f\"Seed run {run_id} did not complete within timeout\")
-
-run_id = post_run()
-wait_run(run_id)
-PY
+        run: docker compose run --rm api python -m sentinelqa.ci.seed_run
 
       - name: Data Quality gate
         run: docker compose run --rm api python -m sentinelqa.dq.run
@@ -121,3 +80,12 @@ PY
       - name: Stop services
         if: always()
         run: docker compose down
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run actionlint
+        uses: rhysd/actionlint@v1
