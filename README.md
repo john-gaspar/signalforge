@@ -1,5 +1,68 @@
 # SignalForge
 
+## System Architecture
+
+```mermaid
+flowchart LR
+
+    subgraph Client
+        A[Replay Trigger<br/>POST /runs/replay]
+    end
+
+    subgraph API Layer
+        B[FastAPI<br/>Run Creation]
+    end
+
+    subgraph Queue
+        C[RQ Queue<br/>Redis]
+    end
+
+    subgraph Worker Layer
+        D[Worker<br/>Pipeline Execution]
+        E[Artifact Generation]
+        F[Metric Collection]
+    end
+
+    subgraph Storage
+        G[(Postgres<br/>Run State + Metadata)]
+        H[(Artifacts Dir<br/>Immutable Outputs)]
+    end
+
+    subgraph Reliability Enforcement
+        I[SentinelQA<br/>Drift + Budget Checks]
+        J[Baseline Store]
+    end
+
+    subgraph CI
+        K[CI Gate<br/>FAIL / WARN / PASS]
+    end
+
+    A --> B
+    B --> G
+    B --> C
+    C --> D
+    D --> E
+    D --> F
+    E --> H
+    F --> H
+    D --> G
+
+    H --> I
+    G --> I
+    J --> I
+
+    I --> K
+```
+
+### Architectural Principles
+
+- API boundary validates and enqueues deterministically  
+- Worker executes with explicit state transitions  
+- Artifacts are immutable once written  
+- SentinelQA enforces baseline-controlled regression  
+- CI blocks FAIL-level reliability violations  
+
+
 Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipeline stages plus a QA gate script.
 
 ## Quick start
