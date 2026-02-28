@@ -36,6 +36,8 @@ jobs:
         run: docker compose up -d postgres redis
 
       - name: Run migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
         run: docker compose run --rm api alembic upgrade head
 
       - name: Generate metrics (seed run)
