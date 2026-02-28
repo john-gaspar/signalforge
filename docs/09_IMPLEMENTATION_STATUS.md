@@ -46,7 +46,7 @@ Graph invariants tests — ⛔ Not implemented
 
 Schema validation (Pydantic) — ✅ Implemented  
 Structural invariants — ✅ Implemented  
-Drift detection — ⛔ Not implemented  
+Drift detection — ✅ Implemented  
 
 ---
 
@@ -54,7 +54,7 @@ Drift detection — ⛔ Not implemented
 
 Golden dataset — ✅ Implemented  
 Benchmark gate — ✅ Implemented  
-F1 regression tracking — ⛔ Not implemented  
+F1 regression tracking — ✅ Implemented  
 Latency distribution tracking — ✅ Implemented (p50/p95 in benchmark)  
 
 ---

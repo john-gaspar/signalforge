@@ -193,6 +193,12 @@ def main() -> None:
     print(f"Seed run created: {run_id}")
     status = _wait_run(base_url, run_id)
     print(f"Seed run {run_id} completed with status {status}")
+    try:
+        Path("artifacts").mkdir(exist_ok=True)
+        Path("artifacts/latest_seed_run_id").write_text(run_id)
+    except Exception:
+        # Non-fatal; logging to stderr would be noisy for CI
+        pass
 
 
 if __name__ == "__main__":

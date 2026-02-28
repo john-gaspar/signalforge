@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "name": "signalforge_drift_baseline",
+  "notes": "Stable, artifact-derived summaries only. No timestamps, no run_id. Update via `python -m sentinelqa.dq.drift_baseline --run-id <id> --force`.",
+  "source": {
+    "fixtures_set": "fixtures/tickets",
+    "pipeline_mode": "replay"
+  },
+  "policy": {
+    "default_mode": "exact",
+    "default_numeric_tolerance": {
+      "type": "percent",
+      "value": 0.0
+    },
+    "default_dist_tolerance": {
+      "type": "percent_points",
+      "value": 5.0
+    },
+    "top_k": 8,
+    "other_bucket_key": "__other__"
+  },
+  "checks": {
+    "events.total": {
+      "mode": "exact",
+      "baseline": 1
+    },
+    "events.by_type": {
+      "mode": "distribution",
+      "baseline": {},
+      "tolerance": {
+        "type": "percent_points",
+        "value": 5.0
+      }
+    },
+    "events.by_severity": {
+      "mode": "distribution",
+      "baseline": {},
+      "tolerance": {
+        "type": "percent_points",
+        "value": 5.0
+      },
+      "optional": true
+    },
+    "clusters.count": {
+      "mode": "numeric",
+      "baseline": 1,
+      "tolerance": {
+        "type": "absolute",
+        "value": 0
+      },
+      "optional": true
+    },
+    "clusters.size_buckets": {
+      "mode": "distribution",
+      "baseline": {
+        "1": 1
+      },
+      "tolerance": {
+        "type": "percent_points",
+        "value": 10.0
+      },
+      "optional": true
+    },
+    "artifacts.required_files_present": {
+      "mode": "set_exact",
+      "baseline": [
+        "alert.json",
+        "clusters.json",
+        "events.json",
+        "metrics.json",
+        "summary.json"
+      ]
+    },
+    "metrics.required_keys_present": {
+      "mode": "set_contains",
+      "baseline": [
+        "events",
+        "clusters",
+        "alerts_sent",
+        "latency_ms"
+      ]
+    },
+    "metrics.stable_flags": {
+      "mode": "object_exact",
+      "baseline": {},
+      "optional": true
+    }
+  },
+  "generated_from": {
+    "run_id": "80294c1eaa340d4262d8e8ddd3c57879",
+    "source": "drift_baseline.py"
+  }
+}

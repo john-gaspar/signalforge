@@ -20,6 +20,7 @@ Source of truth for implemented vs planned capabilities. See docs/09_IMPLEMENTAT
   - Fixture schema validation (Pydantic) for `fixtures/tickets/*`.
   - Artifact structural checks (non-empty events, unique event_id, metrics keys).
   - DB invariant: run exists and succeeded (skips if DB unavailable or not Postgres).
+  - Drift detection: compares artifact-derived summaries to baseline (`sentinelqa/baselines/drift_baseline.json`) with numeric/distribution tolerances; default warn locally, fail in CI.
 
 ## CI/CD (see .github/workflows/ci.yml)
 1) Build images
@@ -46,7 +47,6 @@ Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`
 - Migration tests skip when `DATABASE_URL` is missing or non-Postgres.
 
 ## Known Gaps / Planned
-- Drift detection (Data Quality) — not implemented.
 - Graph/Neo4j integration — not implemented.
 - Load testing scaffold — not implemented.
 - Observability: logging/metrics minimal; tracing absent.
@@ -54,5 +54,6 @@ Actionlint runs in a separate lint job via docker image `rhysd/actionlint:1.7.0`
 ## Developer Notes
 - Use `python -m sentinelqa.ci.seed_run --base-url http://api:8000` (in compose) or `http://localhost:8000` (host) to seed a run. The wait logic is pure Python and no longer depends on curl.
 - Run benchmark locally: `python -m sentinelqa.bench.run --base-url http://api:8000 --fixtures fixtures/golden --out artifacts/bench/latest.json` then `python -m sentinelqa.gates.bench_gate`.
+- Regenerate drift baseline from a run: `python -m sentinelqa.dq.drift_baseline --run-id <run_id> --force`.
 - `docker compose up -d api worker` is schema-safe because migrations run on startup.
 - Health and OpenAPI are stable once the container is up; no uvicorn reload in compose unless `UVICORN_RELOAD=1` is set.
