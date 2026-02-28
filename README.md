@@ -17,7 +17,7 @@ Lightweight replay pipeline with FastAPI, RQ, Postgres, Redis, and stubbed pipel
    ```
 6. Check status: `curl http://localhost:8000/runs/<run_id>`.
 7. Inspect artifacts: `artifacts/runs/<run_id>/`.
-8. QA gate (local venv): `python sentinelqa/gates/gate.py`.
+8. QA gate (local venv): `python3 sentinelqa/gates/gate.py`.
    - Containerized gate (CI parity): `docker compose run --rm api python sentinelqa/gates/gate.py`.
 
 ## Environment variables
