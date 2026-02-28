@@ -24,8 +24,12 @@ services:
     volumes:
       - ./:/code
     depends_on:
-      - postgres
-      - redis
+      api:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
 
   postgres:
     image: postgres:16
