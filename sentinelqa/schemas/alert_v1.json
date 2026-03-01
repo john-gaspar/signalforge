@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "alert_v1",
+  "type": "object",
+  "required": ["decision", "channel", "text"],
+  "properties": {
+    "decision": { "type": "string", "enum": ["sent", "suppressed"] },
+    "channel": { "type": "string" },
+    "text": { "type": "string" }
+  },
+  "additionalProperties": false
+}

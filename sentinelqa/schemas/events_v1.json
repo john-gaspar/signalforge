@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "events_v1",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["event_id", "source", "normalized", "raw_file"],
+    "properties": {
+      "event_id": {"type": "string", "minLength": 1},
+      "source": {"type": "string", "minLength": 1},
+      "normalized": {
+        "type": "object",
+        "required": ["subject", "body"],
+        "properties": {
+          "customer": {"type": ["string", "null"]},
+          "subject": {"type": "string"},
+          "body": {"type": "string"},
+          "created_at": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      },
+      "raw_file": {"type": "string", "minLength": 1}
+    },
+    "additionalProperties": false
+  }
+}
