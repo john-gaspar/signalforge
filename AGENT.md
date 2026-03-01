@@ -65,6 +65,110 @@ Never:
 
 ---
 
+# Operating Model (Mandatory)
+
+This repository follows a strict separation of concerns:
+
+- ChatGPT Project UI → produces prompts only.
+- Codex (VS Code) → executes and modifies repository code.
+
+This separation is structural and non-negotiable.
+
+Codex must never assume conversational memory as source of truth.
+All decisions must be grounded in repository state.
+
+---
+
+## Snapshot Anchor Requirement
+
+Before implementing any change, Codex must assume the repository HEAD commit is the only valid state reference.
+
+All reasoning must be based on:
+
+- Current HEAD SHA
+- Current working tree state
+- Actual code in repository
+- Active CI workflows
+
+Never rely on historical conversation context.
+
+---
+
+## Mandatory Reality Check (Pre-Implementation)
+
+Before writing or modifying any code, Codex must:
+
+1. Inspect relevant code paths.
+2. Inspect relevant CI workflows under `.github/workflows/`.
+3. Inspect environment variable usage (`os.getenv`, settings modules, docker-compose).
+4. Confirm artifact directories and baseline paths.
+5. Confirm migration state if DB-related.
+6. Confirm tests covering the affected area.
+
+Codex must produce an explicit:
+
+"Assumptions vs Reality" list
+
+Each assumption must be confirmed with:
+- File path
+- Relevant line reference OR command evidence
+
+If documentation conflicts with code:
+- Code + workflows override documentation.
+- Documentation must be updated in the same commit.
+
+---
+
+## Scope Control Rules
+
+For every task:
+
+Codex must explicitly confirm:
+
+- One committable chunk only.
+- No unrelated refactors.
+- No hidden behavior changes.
+- No secrets, credentials, or tokens introduced into code or workflows.
+- No inline CI business logic introduced.
+
+If the requested change implies multiple subsystems, Codex must:
+- Decompose the task.
+- Implement only the smallest safe unit.
+- STOP.
+
+---
+
+## Required Output (Post-Implementation)
+
+After completing a change, Codex must output:
+
+1. Files changed (exact list).
+2. Commands executed + results.
+3. Verification steps performed.
+4. `git diff --stat`.
+5. Proposed commit message.
+6. STOP.
+
+No additional speculative suggestions.
+
+---
+
+## Documentation Discipline (Non-Negotiable)
+
+Whenever system behavior changes, Codex must update:
+
+- docs/09_IMPLEMENTATION_STATUS.md
+- docs/CURRENT_STATE.md
+- PROJECT_SNAPSHOT.md
+
+If documentation is not updated, the feature is incomplete.
+
+Documentation is considered invalid if it drifts from code.
+
+CI workflows and repository code are authoritative over docs.
+
+---
+
 # 3. CI & Workflow Rules (Non-Negotiable)
 
 CI YAML must be declarative orchestration only.

@@ -161,3 +161,6 @@ Defined in `sentinelqa/gates/thresholds.yaml` (e.g., latency max, alerts_sent mi
 - How to evolve: swap stub stages for real integrations (APIs, Hugging Face models), add more fixtures (anonymized/captured), broaden thresholds, and grow pytest suites (unit, integration, e2e).
 - CI contract: seed run → QA gate → pytest. This stays stable as logic becomes “real,” keeping regressions visible early.
 - Workflow: solo is fine to commit to `main`; if collaborators join, use short-lived branches/PRs so QA gate and tests run on every change.
+
+## Development Model
+This project uses a strict ChatGPT (prompt generation) + Codex (implementation) workflow. See docs/PROJECT_OPERATING_MODEL.md and AGENT.md.
