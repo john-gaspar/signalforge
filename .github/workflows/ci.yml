@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check snapshot head SHA
-        run: python3 -m sentinelqa.ci.check_snapshot_head --expected "${{ github.sha }}"
+        run: python3 -m sentinelqa.ci.check_snapshot_head
 
       - name: Set up Python (for any helper scripts)
         uses: actions/setup-python@v5
