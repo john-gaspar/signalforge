@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from sentinelqa.dq.checks import check_artifact_invariants
+from sentinelqa.artifacts.manifest import write_manifest
 
 REQUIRED_FILES = [
     "events.json",
@@ -246,6 +247,11 @@ def main() -> None:
 
     gate_results = _build_gate_results(os.environ)
     _write_run_metadata(run_dir, run_record, gate_results)
+    try:
+        write_manifest(run_dir, run_record["run_id"], REQUIRED_FILES)
+    except Exception as exc:
+        print(f"[FAIL] manifest write: {exc}")
+        sys.exit(1)
     print("[PASS] run contract")
     sys.exit(0)
 

@@ -88,6 +88,9 @@ jobs:
       - name: Run contract gate
         run: docker compose run --rm api python -m sentinelqa.gates.gate_run_contract
 
+      - name: Manifest integrity gate
+        run: docker compose run --rm api python -m sentinelqa.gates.gate_manifest_integrity
+
       - name: SLO gate
         run: docker compose run --rm api python -m sentinelqa.gates.gate_slo
 
