@@ -1,7 +1,7 @@
 # PROJECT_SNAPSHOT
 
 ## HEAD
-- SHA: <to be filled on commit>
+- SHA: b10235bc4b8206f700c8629c87cb1bb4a4262159
 
 ## System Summary
 SignalForge is a deterministic replay pipeline with FastAPI + RQ worker, producing JSON artifacts per run, guarded by QA gates (benchmark, data quality/drift, graph invariants, load), with docker-compose services (Postgres, Redis, Neo4j) and CI workflows enforcing migrations, gates, and tests.
