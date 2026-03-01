@@ -28,4 +28,4 @@ jobs:
         run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
 
       - name: Clean load artifacts
-        run: rm -rf artifacts/load mkdir -p artifacts/load
+        run: rm -rf artifacts/load && mkdir -p artifacts/load

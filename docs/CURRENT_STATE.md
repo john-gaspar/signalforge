@@ -58,8 +58,6 @@ Actionlint lint job uses docker image `rhysd/actionlint:1.7.0`.
 - Migration tests skip when `DATABASE_URL` is missing or non-Postgres.
 
 ## Known Gaps / Planned
-- Graph/Neo4j integration — not implemented.
-- Load testing scaffold — not implemented.
 - Observability: logging/metrics minimal; tracing absent.
 
 ## Developer Notes

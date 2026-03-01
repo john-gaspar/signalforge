@@ -144,7 +144,7 @@ The focus is operational discipline across:
 ## Environment variables
 - `DATABASE_URL` (e.g., `postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge`)
 - `REDIS_URL` (e.g., `redis://redis:6379/0`)
-- `ARTIFACTS_DIR` (default `/code/artifacts` in Docker, `./artifacts` locally)
+- `ARTIFACTS_DIR` (default `/code/artifacts` in Docker, `./artifacts` locally; optional in CI helper)
 - `RQ_QUEUE_NAME` (default `signalforge`)
 
 ## QA thresholds
