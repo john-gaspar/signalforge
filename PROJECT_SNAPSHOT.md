@@ -44,6 +44,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Artifact schema gate (`sentinelqa/gates/gate_artifact_schema.py`) validates per-run artifacts against versioned JSON Schemas under `sentinelqa/schemas/`.
 - Schema compatibility gate (`sentinelqa/gates/gate_schema_compat.py`) blocks breaking changes to artifact schemas by comparing against committed baselines under `sentinelqa/schemas_baseline/v1/`.
 - Failure injection gate (`sentinelqa/gates/gate_failure_injection.py`, nightly optional) simulates infra/tamper faults and enforces failure categorization with evidence.
+- Deterministic replay gate (`sentinelqa/gates/gate_deterministic_replay.py`, opt-in) runs two identical replays and fails if manifest fingerprints diverge.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
