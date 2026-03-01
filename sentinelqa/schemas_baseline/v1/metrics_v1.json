@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "metrics_v1",
+  "type": "object",
+  "required": ["run_id", "events", "clusters", "alerts_sent", "latency_ms"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "events": { "type": "integer", "minimum": 0 },
+    "clusters": { "type": "integer", "minimum": 0 },
+    "alerts_sent": { "type": "integer", "minimum": 0 },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "cost_usd_est": { "type": "number" }
+  },
+  "additionalProperties": false
+}

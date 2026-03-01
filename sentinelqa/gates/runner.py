@@ -10,13 +10,14 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_ORDER = ["graph", "bench", "dq", "qa", "artifact_schema", "run_contract", "manifest_integrity", "slo"]
+DEFAULT_ORDER = ["graph", "bench", "dq", "qa", "schema_compat", "artifact_schema", "run_contract", "manifest_integrity", "slo"]
 
 GATE_COMMANDS: Dict[str, List[str]] = {
     "graph": [sys.executable, "-m", "sentinelqa.gates.graph_gate"],
     "bench": [sys.executable, "-m", "sentinelqa.gates.bench_gate"],
     "dq": [sys.executable, "-m", "sentinelqa.dq.run"],
     "qa": [sys.executable, "sentinelqa/gates/gate.py"],
+    "schema_compat": [sys.executable, "-m", "sentinelqa.gates.gate_schema_compat"],
     "artifact_schema": [sys.executable, "-m", "sentinelqa.gates.gate_artifact_schema"],
     "run_contract": [sys.executable, "-m", "sentinelqa.gates.gate_run_contract"],
     "manifest_integrity": [sys.executable, "-m", "sentinelqa.gates.gate_manifest_integrity"],
