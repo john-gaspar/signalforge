@@ -15,7 +15,7 @@ SignalForge is a deterministic replay pipeline with FastAPI + RQ worker, produci
 - CI enforcement — Entry: `.github/workflows/ci.yml` and `.github/workflows/perf.yml`; Gates invoked per workflow stage.
 
 ## CI Workflows
-- ci.yml — Builds images; starts postgres/redis/neo4j/api/worker; waits for health; seeds run; runs graph gate, benchmark gate, DQ gate, metrics gate; pytest; down services.
+- ci.yml — Builds images; starts postgres/redis/neo4j/api/worker; waits for health; seeds run; runs graph gate, benchmark gate, DQ gate, metrics gate, run contract gate; pytest; down services.
 - perf.yml — Scheduled/manual only; builds; starts postgres/redis/api/worker; health wait; warmup seed; clears load artifacts; runs Locust headless; generates load report; runs load gate; uploads report; down services.
 
 ## Artifact Directories (Runtime Only)
@@ -35,6 +35,9 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Postgres stores the same runs/events as authoritative DB state for the API.
 - Graph (Neo4j) is derived from artifacts per run via graph gate; not a source of truth.
 - Load/bench outputs (`artifacts/bench`, `artifacts/load`) are derived metrics for gates.
+
+## Deterministic Guarantees
+- Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) enforces legal run status progression and requires completed runs to include mandatory artifacts and gate outputs (bench report).
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
