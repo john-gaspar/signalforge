@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any, Tuple
 
-ALLOWED_FAILURE_CATEGORIES = {"none", "pipeline_error", "data_quality", "perf", "graph", "unknown"}
+ALLOWED_FAILURE_CATEGORIES = {"none", "pipeline_error", "data_quality", "perf", "graph", "unknown", "infra.redis", "infra.neo4j", "artifact.integrity"}
 DEFAULT_RUN_MAX_MS = 60000
 
 

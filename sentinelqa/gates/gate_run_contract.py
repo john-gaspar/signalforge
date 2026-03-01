@@ -183,7 +183,7 @@ def _write_run_metadata(run_dir: Path, run_record: Dict[str, Any], gate_results:
     failure_category = "none"
     if status == "failed":
         failure_category = str(error.get("type") or error.get("message") or "unknown").lower()
-        allowed = {"pipeline_error", "data_quality", "perf", "graph", "unknown"}
+        allowed = {"pipeline_error", "data_quality", "perf", "graph", "unknown", "infra.redis", "infra.neo4j", "artifact.integrity"}
         if failure_category not in allowed:
             failure_category = "unknown"
 
