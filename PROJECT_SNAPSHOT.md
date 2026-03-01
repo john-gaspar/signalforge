@@ -47,6 +47,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Failure injection gate (`sentinelqa/gates/gate_failure_injection.py`, nightly optional) simulates infra/tamper faults and enforces failure categorization with evidence.
 - Deterministic replay gate (`sentinelqa/gates/gate_deterministic_replay.py`, opt-in) runs two identical replays and fails if manifest fingerprints diverge.
 - Contract index gate (`sentinelqa/gates/gate_contract_index.py`) enforces canonical contracts_index.json for gate ordering, required artifacts, schemas, and baselines.
+- Diagnose CLI (`sentinelqa/cli/diagnose.py`) summarizes run evidence (gates, manifest, schema, SLO, replay) for triage.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
