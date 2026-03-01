@@ -47,5 +47,18 @@ services:
     ports:
       - "6379:6379"
 
+  neo4j:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: "neo4j/signalforge"
+    ports:
+      - "7687:7687"
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p signalforge \"RETURN 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
 volumes:
   pgdata:

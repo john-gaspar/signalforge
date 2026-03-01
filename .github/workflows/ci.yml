@@ -32,8 +32,8 @@ jobs:
       - name: Build images
         run: docker compose build
 
-      - name: Start services (db + redis)
-        run: docker compose up -d postgres redis
+      - name: Start services (db + redis + neo4j)
+        run: docker compose up -d postgres redis neo4j
 
       - name: Wait for postgres:5432
         env:
@@ -80,9 +80,14 @@ jobs:
           docker compose logs --no-color --tail=200 postgres || true
           echo "--- Redis logs ---"
           docker compose logs --no-color --tail=200 redis || true
+          echo "--- Neo4j logs ---"
+          docker compose logs --no-color --tail=200 neo4j || true
 
       - name: Seed run via API
         run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+
+      - name: Graph invariants gate
+        run: docker compose run --rm api python -m sentinelqa.gates.graph_gate
 
       - name: Data Quality gate
         run: docker compose run --rm api python -m sentinelqa.dq.run

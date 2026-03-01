@@ -36,9 +36,9 @@ Alert entity — ⚠️ Artifact only
 
 # Graph Layer
 
-Neo4j integration — ⛔ Not implemented  
-Graph persistence — ⛔ Not implemented  
-Graph invariants tests — ⛔ Not implemented  
+Neo4j integration — ✅ Implemented (local compose)  
+Graph persistence — ✅ Implemented (artifacts → Neo4j)  
+Graph invariants tests — ✅ Implemented  
 
 ---
 
