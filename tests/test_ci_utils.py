@@ -1,7 +1,5 @@
-import os
 import socket
 import threading
-import time
 from pathlib import Path
 
 import pytest
@@ -10,7 +8,7 @@ from sentinelqa.ci.wait_tcp import wait_tcp
 from sentinelqa.ci.write_env import _deterministic_env_content, write_env
 
 
-def _start_dummy_tcp_server(host: str = "127.0.0.1") -> tuple[threading.Thread, int]:
+def _start_dummy_tcp_server(host: str = "127.0.0.1") -> tuple[int, callable]:
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.bind((host, 0))
@@ -18,35 +16,51 @@ def _start_dummy_tcp_server(host: str = "127.0.0.1") -> tuple[threading.Thread, 
         sock.close()
         pytest.skip(f"Skipping TCP bind due to permission error: {exc}")
     sock.listen()
+    sock.settimeout(0.1)
     port = sock.getsockname()[1]
+
+    stop_event = threading.Event()
 
     def _serve():
         try:
-            conn, _ = sock.accept()
-            conn.close()
+            while not stop_event.is_set():
+                try:
+                    conn, _ = sock.accept()
+                except socket.timeout:
+                    continue
+                conn.close()
         finally:
             sock.close()
 
     thread = threading.Thread(target=_serve, daemon=True)
     thread.start()
-    return thread, port
+    
+    def shutdown() -> None:
+        stop_event.set()
+        thread.join(timeout=1)
+
+    return port, shutdown
 
 
 def test_wait_tcp_succeeds_with_reachable_port():
-    thread, port = _start_dummy_tcp_server()
+    port, shutdown = _start_dummy_tcp_server()
     try:
         wait_tcp("127.0.0.1", port, timeout=2, interval=0.1)
     finally:
-        # ensure listener thread stops promptly
-        with socket.create_connection(("127.0.0.1", port), timeout=1):
-            pass
-        thread.join(timeout=1)
+        shutdown()
 
 
 def test_wait_tcp_times_out_on_unreachable_port():
-    # Pick a high port unlikely to be in use; retry logic makes this deterministic enough for CI.
+    # Allocate an ephemeral free port then close it so nothing listens there.
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+    except PermissionError as exc:
+        pytest.skip(f"Skipping unreachable-port test due to permission error: {exc}")
+
     with pytest.raises(RuntimeError):
-        wait_tcp("127.0.0.1", 65530, timeout=1, interval=0.1)
+        wait_tcp("127.0.0.1", port, timeout=0.5, interval=0.05)
 
 
 def test_write_env_defaults_and_optionals(tmp_path: Path):
