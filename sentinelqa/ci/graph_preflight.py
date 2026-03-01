@@ -44,8 +44,10 @@ def check_compose_text(compose_path: Path) -> List[str]:
 def check_workflow_text(workflow_path: Path) -> List[str]:
     issues: List[str] = []
     txt = _load_text(workflow_path)
-    if "Graph invariants gate" not in txt or "gates.graph_gate" not in txt:
-        issues.append("CI workflow missing graph gate step")
+    has_direct_graph_gate = "gates.graph_gate" in txt
+    has_gate_runner = "sentinelqa.gates.runner" in txt
+    if not (has_direct_graph_gate or has_gate_runner):
+        issues.append("CI workflow missing graph gate step (direct or via gate runner)")
     if "postgres redis neo4j" not in txt:
         issues.append("CI workflow does not start neo4j with other services")
     neo4j_lines = [l for l in txt.splitlines() if "NEO4J" in l or "neo4j" in l]
