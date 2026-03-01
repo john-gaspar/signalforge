@@ -1,0 +1,64 @@
+name: Perf
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 5 * * *"
+
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Docker Compose v2
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build images
+        run: docker compose build
+
+      - name: Start services (db + redis)
+        run: docker compose up -d postgres redis api worker
+
+      - name: Wait for api health
+        run: docker compose run --rm api python -m sentinelqa.ci.wait_http --url http://api:8000/health --timeout 180
+
+      - name: Seed warmup run
+        run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+
+      - name: Run locust load (headless)
+        run: |
+          docker compose run --rm \
+            -e BASE_URL=http://api:8000 \
+            -e LOAD_USERS=5 \
+            -e LOAD_SPAWN_RATE=1 \
+            -e LOAD_DURATION_S=60 \
+            api \
+            locust -f sentinelqa/load/locustfile.py --headless -u 5 -r 1 -t 60s --host http://api:8000
+
+      - name: Generate load report
+        run: docker compose run --rm api python -m sentinelqa.load.report --raw artifacts/load/raw.json --out artifacts/load/latest.json
+
+      - name: Load gate
+        run: docker compose run --rm api python -m sentinelqa.gates.load_gate
+
+      - name: Upload load report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-latest
+          path: artifacts/load/latest.json
+
+      - name: Dump compose logs on failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --no-color --tail=200 api || true
+          docker compose logs --no-color --tail=200 worker || true
+          docker compose logs --no-color --tail=200 postgres || true
+          docker compose logs --no-color --tail=200 redis || true
+
+      - name: Stop services
+        if: always()
+        run: docker compose down

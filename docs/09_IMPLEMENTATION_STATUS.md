@@ -61,8 +61,8 @@ Latency distribution tracking — ✅ Implemented (p50/p95 in benchmark)
 
 # Load Testing
 
-Locust setup — ⛔ Not implemented  
-Throughput measurement — ⛔ Not implemented  
+Locust setup — ✅ Implemented  
+Throughput measurement — ✅ Implemented  
 
 ---
 

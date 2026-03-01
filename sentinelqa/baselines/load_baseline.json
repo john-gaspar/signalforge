@@ -1,0 +1,6 @@
+{
+  "min_success_rate": 0.99,
+  "max_enqueue_latency_ms_p95": 500,
+  "max_completion_time_s_p95": 30,
+  "min_throughput_rpm": 10
+}
