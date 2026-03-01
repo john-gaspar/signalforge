@@ -11,6 +11,7 @@ from typing import Dict, List, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ORDER = [
+    "contract_index",
     "graph",
     "bench",
     "dq",
@@ -33,6 +34,7 @@ GATE_COMMANDS: Dict[str, List[str]] = {
     "artifact_schema": [sys.executable, "-m", "sentinelqa.gates.gate_artifact_schema"],
     "failure_injection": [sys.executable, "-m", "sentinelqa.gates.gate_failure_injection"],
     "deterministic_replay": [sys.executable, "-m", "sentinelqa.gates.gate_deterministic_replay"],
+    "contract_index": [sys.executable, "-m", "sentinelqa.gates.gate_contract_index"],
     "run_contract": [sys.executable, "-m", "sentinelqa.gates.gate_run_contract"],
     "manifest_integrity": [sys.executable, "-m", "sentinelqa.gates.gate_manifest_integrity"],
     "slo": [sys.executable, "-m", "sentinelqa.gates.gate_slo"],

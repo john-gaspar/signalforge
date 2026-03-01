@@ -1,0 +1,35 @@
+{
+  "required_artifacts": [
+    "events.json",
+    "clusters.json",
+    "summary.json",
+    "alert.json",
+    "metrics.json"
+  ],
+  "gates_order": [
+    "contract_index",
+    "graph",
+    "bench",
+    "dq",
+    "qa",
+    "schema_compat",
+    "artifact_schema",
+    "failure_injection",
+    "deterministic_replay",
+    "run_contract",
+    "manifest_integrity",
+    "slo"
+  ],
+  "bench_baseline_path": "sentinelqa/baselines/bench_baseline.json",
+  "schemas_v1": {
+    "events.json": "sentinelqa/schemas/events_v1.json",
+    "clusters.json": "sentinelqa/schemas/clusters_v1.json",
+    "summary.json": "sentinelqa/schemas/summary_v1.json",
+    "alert.json": "sentinelqa/schemas/alert_v1.json",
+    "metrics.json": "sentinelqa/schemas/metrics_v1.json"
+  },
+  "optional_gates": {
+    "failure_injection": "FAILURE_INJECTION",
+    "deterministic_replay": "DETERMINISTIC_REPLAY"
+  }
+}
