@@ -79,29 +79,40 @@ def run_gate_sequence(
     return ledger, failed_required
 
 
-def _discover_run_id(run_id_arg: str | None) -> Tuple[str, Path]:
-    if run_id_arg:
-        run_id = run_id_arg
-    else:
-        hint = Path("artifacts/latest_seed_run_id")
-        if not hint.exists():
-            raise RuntimeError("run-id not provided and artifacts/latest_seed_run_id missing")
-        run_id = hint.read_text().strip()
-    run_dir = Path("artifacts/runs") / run_id
+def _resolve_artifacts_root(arg_artifacts_dir: str | None) -> Path:
+    if arg_artifacts_dir:
+        return Path(arg_artifacts_dir)
+    env_dir = os.getenv("ARTIFACTS_DIR")
+    if env_dir:
+        return Path(env_dir)
+    return Path("artifacts")
+
+
+def _discover_run_id(run_id_arg: str | None, artifacts_root: Path) -> Tuple[str, Path]:
+    run_id = run_id_arg or os.getenv("RUN_ID")
+    if not run_id:
+        hint = artifacts_root / "latest_seed_run_id"
+        if hint.exists():
+            run_id = hint.read_text().strip()
+    if not run_id:
+        sys.exit(
+            f"[FAIL] gate runner: missing run_id. Provide --run-id, set RUN_ID, or create {artifacts_root}/latest_seed_run_id."
+        )
+    run_dir = artifacts_root / "runs" / run_id
     if not run_dir.exists():
-        raise RuntimeError(f"run artifacts not found at {run_dir}")
+        sys.exit(f"[FAIL] gate runner: run artifacts not found at {run_dir}")
     return run_id, run_dir
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Deterministic gate runner with ledger output")
-    parser.add_argument("--run-id", help="Run id (defaults to artifacts/latest_seed_run_id)")
-    parser.add_argument("--artifacts-dir", help="Artifacts run dir (defaults to artifacts/runs/<run_id>)")
+    parser.add_argument("--run-id", help="Run id (optional; resolved from RUN_ID env or artifacts/latest_seed_run_id)")
+    parser.add_argument("--artifacts-dir", help="Artifacts root (default ARTIFACTS_DIR or ./artifacts)")
     parser.add_argument("--required", help="Comma-separated required gates", default=",".join(DEFAULT_ORDER))
     args = parser.parse_args()
 
-    run_id, auto_run_dir = _discover_run_id(args.run_id)
-    run_dir = Path(args.artifacts_dir) if args.artifacts_dir else auto_run_dir
+    artifacts_root = _resolve_artifacts_root(args.artifacts_dir)
+    run_id, run_dir = _discover_run_id(args.run_id, artifacts_root)
     required = [g for g in args.required.split(",") if g]
 
     ledger, failed = run_gate_sequence(run_id, run_dir, required)

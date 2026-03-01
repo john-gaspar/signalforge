@@ -47,3 +47,33 @@ def test_gate_runner_unknown_gate_errors(tmp_path: Path):
 
     with pytest.raises(ValueError):
         runner.run_gate_sequence(run_id, run_dir, required=["missing"], gate_order=["missing"], gate_commands={"g1": _cmd(0)})
+
+
+def test_runner_resolves_run_id_from_artifacts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    artifacts_root = tmp_path / "artifacts"
+    artifacts_root.mkdir()
+    (artifacts_root / "latest_seed_run_id").write_text("auto-run\n")
+    (artifacts_root / "runs" / "auto-run").mkdir(parents=True)
+
+    monkeypatch.setenv("ARTIFACTS_DIR", str(artifacts_root))
+
+    run_id, run_dir = runner._discover_run_id(None, artifacts_root)
+    assert run_id == "auto-run"
+    assert run_dir == artifacts_root / "runs" / "auto-run"
+
+
+def test_runner_fails_when_run_id_missing(tmp_path: Path, capsys):
+    artifacts_root = tmp_path / "artifacts"
+    artifacts_root.mkdir()
+    with pytest.raises(SystemExit) as exc:
+        runner._discover_run_id(None, artifacts_root)
+    assert exc.value.code != 0
+
+
+def test_runner_prefers_cli_run_id(tmp_path: Path):
+    artifacts_root = tmp_path / "artifacts"
+    run_dir = artifacts_root / "runs" / "cli-id"
+    run_dir.mkdir(parents=True)
+    run_id, resolved = runner._discover_run_id("cli-id", artifacts_root)
+    assert run_id == "cli-id"
+    assert resolved == run_dir
