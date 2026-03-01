@@ -21,13 +21,7 @@ REQUIRED_FILES = [
     "alert.json",
     "metrics.json",
 ]
-DEFAULT_GATE_RESULTS = [
-    "graph_gate",
-    "bench_gate",
-    "dq_gate",
-    "metrics_gate",
-    "run_contract_gate",
-]
+LEDGER_FILE = "gates.json"
 
 
 def _iso_to_dt(val: Any) -> datetime | None:
@@ -159,10 +153,16 @@ def _validate_gate_results(run_id: str, bench_report: Path, require_bench: bool)
     return errors
 
 
-def _build_gate_results(env: dict[str, str]) -> List[dict[str, str]]:
-    gates = env.get("RUN_CONTRACT_GATES")
-    names = [g.strip() for g in gates.split(",")] if gates else DEFAULT_GATE_RESULTS
-    return [{"name": name, "status": "pass"} for name in names if name]
+def _load_gate_results(run_dir: Path) -> List[dict[str, Any]]:
+    ledger_path = run_dir / LEDGER_FILE
+    if not ledger_path.exists():
+        return []
+    try:
+        data = json.loads(ledger_path.read_text())
+        gates = data.get("gates")
+        return gates if isinstance(gates, list) else []
+    except Exception:
+        return []
 
 
 def _write_run_metadata(run_dir: Path, run_record: Dict[str, Any], gate_results: List[dict[str, str]]) -> None:
@@ -245,7 +245,7 @@ def main() -> None:
             print(f" - {err}")
         sys.exit(1)
 
-    gate_results = _build_gate_results(os.environ)
+    gate_results = _load_gate_results(run_dir)
     _write_run_metadata(run_dir, run_record, gate_results)
     try:
         write_manifest(run_dir, run_record["run_id"], REQUIRED_FILES)

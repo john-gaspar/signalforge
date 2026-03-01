@@ -40,6 +40,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) enforces legal run status progression and requires completed runs to include mandatory artifacts and gate outputs (bench report).
 - SLO gate (`sentinelqa/gates/gate_slo.py`) enforces run metadata completeness and runtime SLO (default max duration) via `run_metadata.json`.
 - Manifest integrity gate (`sentinelqa/gates/gate_manifest_integrity.py`) verifies per-run artifact hashes/bytes/fingerprint against `artifacts/runs/<run_id>/manifest.json` written by the run contract gate.
+- Gate ledger + runner (`sentinelqa/gates/runner.py`) executes gates in deterministic order, records provenance to `artifacts/runs/<run_id>/gates.json`, and CI invokes it instead of ad-hoc gate calls.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.

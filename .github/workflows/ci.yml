@@ -71,28 +71,10 @@ jobs:
       - name: Graph preflight (runtime)
         run: docker compose run --rm api python -m sentinelqa.ci.graph_preflight --mode runtime
 
-      - name: Graph invariants gate
-        run: docker compose run --rm api python -m sentinelqa.gates.graph_gate
-
-      - name: Benchmark gate
+      - name: Gate runner
         env:
           BENCH_BASELINE_PATH: sentinelqa/baselines/bench_baseline.json
-        run: docker compose run --rm api python -m sentinelqa.gates.bench_gate
-
-      - name: Data Quality gate
-        run: docker compose run --rm api python -m sentinelqa.dq.run
-
-      - name: Run QA gate
-        run: docker compose run --rm api python sentinelqa/gates/gate.py
-
-      - name: Run contract gate
-        run: docker compose run --rm api python -m sentinelqa.gates.gate_run_contract
-
-      - name: Manifest integrity gate
-        run: docker compose run --rm api python -m sentinelqa.gates.gate_manifest_integrity
-
-      - name: SLO gate
-        run: docker compose run --rm api python -m sentinelqa.gates.gate_slo
+        run: docker compose run --rm api sh -c "RUN_ID=$(cat artifacts/latest_seed_run_id) && python -m sentinelqa.gates.runner --run-id $RUN_ID"
 
       - name: Run tests
         run: docker compose run --rm api pytest
