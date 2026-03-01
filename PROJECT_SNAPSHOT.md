@@ -15,8 +15,9 @@ SignalForge is a deterministic replay pipeline with FastAPI + RQ worker, produci
 - CI enforcement — Entry: `.github/workflows/ci.yml` and `.github/workflows/perf.yml`; Gates invoked per workflow stage.
 
 ## CI Workflows
-- ci.yml — Builds images; starts postgres/redis/neo4j/api/worker; waits for health; seeds run; runs graph gate, benchmark gate, DQ gate, metrics gate, run contract gate; pytest; down services.
+- ci.yml — Builds images; starts postgres/redis/neo4j/api/worker; waits for health; seeds run; runs gate runner (ledgered gates + optional toggles); pytest; down services.
 - perf.yml — Scheduled/manual only; builds; starts postgres/redis/api/worker; health wait; warmup seed; clears load artifacts; runs Locust headless; generates load report; runs load gate; uploads report; down services.
+- full_validation.yml — Scheduled + manual; runs gate runner with optional realism gates (failure injection, deterministic replay) and uploads artifacts for debugging.
 
 ## Artifact Directories (Runtime Only)
 - `artifacts/runs/` — per-run JSON outputs (events, clusters, summary, alert, metrics).
