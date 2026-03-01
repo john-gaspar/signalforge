@@ -38,6 +38,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 
 ## Deterministic Guarantees
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) enforces legal run status progression and requires completed runs to include mandatory artifacts and gate outputs (bench report).
+- SLO gate (`sentinelqa/gates/gate_slo.py`) enforces run metadata completeness and runtime SLO (default max duration) via `run_metadata.json`.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
