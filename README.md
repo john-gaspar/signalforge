@@ -138,6 +138,7 @@ The focus is operational discipline across:
 
 ## Preflight
 - `./scripts/preflight.sh` (compileall + optional actionlint/ruff)
+- Graph MVP preflight (Neo4j readiness + idempotency): `docker compose up -d postgres redis neo4j api worker && docker compose run --rm api python -m sentinelqa.ci.graph_preflight --mode runtime`
 
 ## Environment variables
 - `DATABASE_URL` (e.g., `postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge`)

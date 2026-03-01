@@ -86,6 +86,12 @@ jobs:
       - name: Seed run via API
         run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
 
+      - name: Graph preflight (static)
+        run: docker compose run --rm api python -m sentinelqa.ci.graph_preflight --mode static
+
+      - name: Graph preflight (runtime)
+        run: docker compose run --rm api python -m sentinelqa.ci.graph_preflight --mode runtime
+
       - name: Graph invariants gate
         run: docker compose run --rm api python -m sentinelqa.gates.graph_gate
 
