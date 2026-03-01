@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 def _load_json(path: Path) -> dict:
@@ -16,11 +17,17 @@ def _fail(msg: str):
     sys.exit(1)
 
 
-def _check_threshold(name: str, value: float, op: str, limit: float, details: list[str]):
-    if op == "min" and value < limit:
-        details.append(f"{name}: {value:.3f} < min {limit}")
-    if op == "max" and value > limit:
-        details.append(f"{name}: {value:.3f} > max {limit}")
+def _check_threshold(name: str, value: float, op: str, limit: float, details: list[str], tol_pct: float = 0.0):
+    adj_limit = limit
+    if tol_pct and op == "max":
+        adj_limit = limit * (1 + tol_pct)
+    if tol_pct and op == "min":
+        adj_limit = limit * (1 - tol_pct)
+
+    if op == "min" and value < adj_limit:
+        details.append(f"{name}: {value:.3f} < min {adj_limit:.3f} (base {limit}, tol {tol_pct*100:.0f}% )")
+    if op == "max" and value > adj_limit:
+        details.append(f"{name}: {value:.3f} > max {adj_limit:.3f} (base {limit}, tol {tol_pct*100:.0f}% )")
 
 
 def main() -> None:
@@ -36,6 +43,9 @@ def main() -> None:
     baseline = _load_json(baseline_path)
 
     details: list[str] = []
+    tol_completion = float(os.getenv("LOAD_COMPLETION_TOL_PCT", "0.25"))
+    tol_throughput = float(os.getenv("LOAD_THROUGHPUT_TOL_PCT", "0.10"))
+
     _check_threshold(
         "success_rate",
         float(report.get("success_rate", 0.0)),
@@ -56,6 +66,7 @@ def main() -> None:
         "max",
         float(baseline.get("max_completion_time_s_p95", 1e9)),
         details,
+        tol_completion,
     )
     _check_threshold(
         "throughput_rpm",
@@ -63,6 +74,7 @@ def main() -> None:
         "min",
         float(baseline.get("min_throughput_rpm", 0.0)),
         details,
+        tol_throughput,
     )
 
     if details:

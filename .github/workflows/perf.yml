@@ -27,6 +27,16 @@ jobs:
       - name: Seed warmup run
         run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
 
+      - name: Clean load artifacts
+        run: docker compose run --rm api python - <<'PY'
+import shutil
+from pathlib import Path
+root = Path("artifacts/load")
+shutil.rmtree(root, ignore_errors=True)
+root.mkdir(parents=True, exist_ok=True)
+print("cleared", root)
+PY
+
       - name: Run locust load (headless)
         run: |
           docker compose run --rm \

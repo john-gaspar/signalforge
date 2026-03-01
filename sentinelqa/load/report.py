@@ -6,21 +6,8 @@ from pathlib import Path
 from typing import List
 
 
-def _percentile(data: List[float], pct: float) -> float:
-    if not data:
-        return 0.0
-    data_sorted = sorted(data)
-    k = (len(data_sorted) - 1) * pct
-    f = int(k)
-    c = min(f + 1, len(data_sorted) - 1)
-    if f == c:
-        return data_sorted[f]
-    return data_sorted[f] + (data_sorted[c] - data_sorted[f]) * (k - f)
-
-
 def generate_report(raw_path: Path, out_path: Path) -> dict:
     raw = json.loads(raw_path.read_text())
-    completion = raw.get("completion_time_s", [])
     duration_s = float(raw.get("duration_s", 0))
     runs_done = int(raw.get("runs_succeeded", 0))
     throughput_rpm = (runs_done / duration_s * 60) if duration_s else 0.0
@@ -31,8 +18,8 @@ def generate_report(raw_path: Path, out_path: Path) -> dict:
         "success_rate": raw.get("success_rate", 0.0),
         "enqueue_latency_ms_p50": raw.get("enqueue_latency_ms_p50", 0),
         "enqueue_latency_ms_p95": raw.get("enqueue_latency_ms_p95", 0),
-        "completion_time_s_p50": _percentile(completion, 0.50),
-        "completion_time_s_p95": _percentile(completion, 0.95),
+        "completion_time_s_p50": raw.get("completion_time_s_p50", 0.0),
+        "completion_time_s_p95": raw.get("completion_time_s_p95", 0.0),
         "throughput_rpm": throughput_rpm,
         "duration_s": duration_s,
         "users": raw.get("users"),

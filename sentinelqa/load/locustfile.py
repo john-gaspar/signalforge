@@ -88,7 +88,6 @@ def on_test_stop(environment, **_kwargs):
         else 0.0,
         "enqueue_latency_ms_p50": stats.get_response_time_percentile(0.50),
         "enqueue_latency_ms_p95": stats.get_response_time_percentile(0.95),
-        "completion_time_s": _completion_samples,
         "completion_time_s_p50": _percentile(_completion_samples, 0.50),
         "completion_time_s_p95": _percentile(_completion_samples, 0.95),
         "runs_succeeded": _run_counts["succeeded"],
@@ -97,4 +96,6 @@ def on_test_stop(environment, **_kwargs):
         "users": USERS,
         "spawn_rate": SPAWN_RATE,
     }
-    RAW_PATH.write_text(json.dumps(data, indent=2))
+    tmp_path = RAW_PATH.with_suffix(".tmp")
+    tmp_path.write_text(json.dumps(data, indent=2))
+    tmp_path.replace(RAW_PATH)
