@@ -96,3 +96,49 @@ def test_run_contract_illegal_transition(tmp_path: Path):
 
     errors = validate_run_contract(run_dir, record, bench, require_bench=True)
     assert any("ended_at missing" in e for e in errors)
+
+
+def test_run_contract_allows_small_clock_skew(tmp_path: Path):
+    run_id = "r4"
+    run_dir = tmp_path / "runs" / run_id
+    _write_artifacts(run_dir, run_id)
+    bench = tmp_path / "bench" / "latest.json"
+    bench.parent.mkdir(parents=True, exist_ok=True)
+    bench.write_text(json.dumps({"run_id": run_id}))
+
+    now = datetime.now(timezone.utc)
+    record = {
+        "run_id": run_id,
+        "status": "succeeded",
+        "created_at": now.isoformat(),
+        "started_at": (now - timedelta(seconds=10)).isoformat(),  # 10s skew
+        "ended_at": (now + timedelta(seconds=2)).isoformat(),
+        "metrics": {"events": 1},
+        "error": None,
+    }
+
+    errors = validate_run_contract(run_dir, record, bench, require_bench=True, max_clock_skew_s=300)
+    assert errors == []
+
+
+def test_run_contract_fails_on_large_clock_skew(tmp_path: Path):
+    run_id = "r5"
+    run_dir = tmp_path / "runs" / run_id
+    _write_artifacts(run_dir, run_id)
+    bench = tmp_path / "bench" / "latest.json"
+    bench.parent.mkdir(parents=True, exist_ok=True)
+    bench.write_text(json.dumps({"run_id": run_id}))
+
+    now = datetime.now(timezone.utc)
+    record = {
+        "run_id": run_id,
+        "status": "succeeded",
+        "created_at": now.isoformat(),
+        "started_at": (now - timedelta(minutes=10)).isoformat(),  # 10 minutes early
+        "ended_at": (now + timedelta(seconds=2)).isoformat(),
+        "metrics": {"events": 1},
+        "error": None,
+    }
+
+    errors = validate_run_contract(run_dir, record, bench, require_bench=True, max_clock_skew_s=300)
+    assert any("started_at earlier than created_at" in e for e in errors)

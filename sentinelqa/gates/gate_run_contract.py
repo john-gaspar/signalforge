@@ -92,7 +92,7 @@ def _load_run_record(run_id: str, record_path: Path | None) -> Dict[str, Any]:
     return _load_run_record_from_db(run_id)
 
 
-def _validate_state_transitions(run: Dict[str, Any]) -> List[str]:
+def _validate_state_transitions(run: Dict[str, Any], max_clock_skew_s: int) -> List[str]:
     errors: List[str] = []
     status = run.get("status")
     created_at = _iso_to_dt(run.get("created_at"))
@@ -117,9 +117,15 @@ def _validate_state_transitions(run: Dict[str, Any]) -> List[str]:
         elif not isinstance(err, dict) or not err.get("type") and not err.get("message"):
             errors.append("failed run error missing failure_reason detail")
 
-    # Order checks only if timestamps are parseable
+    # Order checks only if timestamps are parseable; allow small skew between DB clock and app clock.
     if created_at and started_at and started_at < created_at:
-        errors.append("started_at earlier than created_at")
+        skew_s = (created_at - started_at).total_seconds()
+        if skew_s > max_clock_skew_s:
+            errors.append(
+                f"started_at earlier than created_at by {int(skew_s)}s (max skew {max_clock_skew_s}s)"
+            )
+        else:
+            print(f"[WARN] clock skew detected: started_at {started_at} before created_at {created_at} by {int(skew_s)}s")
     if started_at and ended_at and ended_at < started_at:
         errors.append("ended_at earlier than started_at")
 
@@ -192,9 +198,16 @@ def _write_run_metadata(run_dir: Path, run_record: Dict[str, Any], gate_results:
     out_path.write_text(json.dumps(payload, indent=2, sort_keys=True))
 
 
-def validate_run_contract(run_dir: Path, run_record: Dict[str, Any], bench_report: Path, require_bench: bool) -> List[str]:
+def validate_run_contract(
+    run_dir: Path,
+    run_record: Dict[str, Any],
+    bench_report: Path,
+    require_bench: bool,
+    max_clock_skew_s: int | None = None,
+) -> List[str]:
     errors: List[str] = []
-    errors += _validate_state_transitions(run_record)
+    max_skew = max_clock_skew_s if max_clock_skew_s is not None else int(os.getenv("RUN_CONTRACT_MAX_CLOCK_SKEW_S", "300"))
+    errors += _validate_state_transitions(run_record, max_skew)
     errors += _validate_artifacts(run_dir, run_record["run_id"])
     errors += _validate_gate_results(run_record["run_id"], bench_report, require_bench)
     return errors
