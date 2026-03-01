@@ -79,49 +79,92 @@ flowchart LR
 
 ---
 
-## Overview
-
-SignalForge is a reliability-first AI system designed to enforce:
-
-- Baseline-controlled regression
-- Deterministic replay
-- Error-budget governance
-- Explicit lifecycle semantics
-- CI-enforced reliability guarantees
-
-This repository demonstrates ownership of AI system reliability — not just automation.
-
-The focus is operational discipline across:
-
-- Schema integrity
-- Structural invariants
-- Drift detection
-- Latency regression
-- Cost control
-- Failure isolation
+## What it is / What it proves
+SignalForge is a deterministic replay harness for reliability enforcement. It proves:
+- Replays are reproducible: artifacts and manifest fingerprints remain stable across runs.
+- Domain quality gates block regressions (metrics, DQ + drift, benchmark, graph, schema, contract).
+- CI enforces the entire gate ledger end-to-end, with optional chaos and replay checks.
 
 ---
 
-## Quick start
-1. Copy env: `cp .env.example .env` and fill values.
-2. Start backing services: `docker compose up -d postgres redis`.
-3. Run DB migrations (once): `docker compose run --rm api alembic upgrade head`.
-4. Run API + worker (separate terminals):
-   - API: `docker compose up api`
-   - Worker: `docker compose up worker`
-   (containers auto-run `alembic upgrade head` on startup)
-5. Add fixtures in `fixtures/tickets/*.json`.
-6. Trigger a replay run:
-   ```bash
-   curl -X POST http://localhost:8000/runs/replay \
-     -H "Content-Type: application/json" \
-     -d '{"fixtures_dir":"fixtures/tickets","fault_config":{}}'
-   ```
-7. Check status: `curl http://localhost:8000/runs/<run_id>`.
-8. Inspect artifacts: `artifacts/runs/<run_id>/`.
-9. QA gate (local venv): `python3 sentinelqa/gates/gate.py`.
-   - Containerized gate (CI parity): `docker compose run --rm api python sentinelqa/gates/gate.py`.
-10. Data Quality gate: `python -m sentinelqa.dq.run`
+## Quick start (docker-compose, CI-parity helpers)
+1) Write env (defaults are compose-safe):
+```bash
+python -m sentinelqa.ci.write_env --path .env
+```
+2) Bring up dependencies and apply migrations:
+```bash
+docker compose up -d postgres redis neo4j
+docker compose run --rm api alembic upgrade head
+```
+3) Start services:
+```bash
+docker compose up -d api worker
+```
+4) Seed a deterministic run (writes `artifacts/latest_seed_run_id`):
+```bash
+docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+```
+5) Run gates locally (pick what you need):
+```bash
+# Graph gate (needs neo4j up)
+docker compose run --rm api python -m sentinelqa.gates.graph_gate
+# Benchmark gate
+docker compose run --rm api python -m sentinelqa.gates.bench_gate
+# Data Quality + drift
+docker compose run --rm api python -m sentinelqa.dq.run
+# Metrics QA gate
+docker compose run --rm api python sentinelqa/gates/gate.py
+# Contract + manifest integrity + SLO are executed via the runner:
+docker compose run --rm api python -m sentinelqa.gates.runner
+```
+6) Inspect artifacts:
+```
+artifacts/runs/<run_id>/
+```
+Neo4j is gate-only; API/worker do not depend on it at runtime.
+
+---
+
+## Reliability Gates (what they enforce / how to run)
+- Metrics gate: latency/alerts thresholds from `sentinelqa/gates/thresholds.yaml`.  
+  Run: `docker compose run --rm api python sentinelqa/gates/gate.py`
+- Data Quality + Drift: schema + structural checks, drift vs `sentinelqa/baselines/drift_baseline.json`.  
+  Run: `docker compose run --rm api python -m sentinelqa.dq.run`
+- Benchmark gate: accuracy/latency vs `sentinelqa/baselines/bench_baseline.json`.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.bench_gate`
+- Graph gate: Neo4j projection + invariants.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.graph_gate`
+- Artifact schema gate: validates run artifacts against schemas in `sentinelqa/schemas/`.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_artifact_schema`
+- Schema compatibility gate: blocks breaking schema changes vs `sentinelqa/schemas_baseline/v1/`.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_schema_compat`
+- Contract index gate: enforces canonical contract (gate order, required artifacts, schemas).  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_contract_index`
+- Run contract gate: legal status transitions, required artifacts, bench report.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_run_contract`
+- Manifest integrity gate: hashes/sizes/fingerprint for artifacts.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_manifest_integrity`
+- SLO gate: run metadata completeness + runtime SLO.  
+  Run: `docker compose run --rm api python -m sentinelqa.gates.gate_slo`
+- Optional realism gates (env controlled):  
+  - Failure injection (`FAILURE_INJECTION=1`)  
+  - Deterministic replay (`DETERMINISTIC_REPLAY=1`)  
+  Run via runner with env set: `FAILURE_INJECTION=1 DETERMINISTIC_REPLAY=1 docker compose run --rm api python -m sentinelqa.gates.runner`
+- Perf/load gate (perf workflow only): `docker compose run --rm api python -m sentinelqa.gates.load_gate` after generating load report.
+
+---
+
+## CI Workflows
+- `ci.yml`: build images → start postgres/redis/neo4j/api/worker → migrations → seed run → gate runner (ledgered gates) → pytest → compose down. Snapshot SHA check runs up front; graph preflight (static/runtime) runs before gates.
+- `perf.yml`: scheduled/manual load test; builds → starts postgres/redis/api/worker → health wait → warmup seed → run Locust → generate load report → load gate → upload artifacts → down.
+- `full_validation.yml`: scheduled/manual; builds → starts full stack → seed run → gate runner with optional realism gates enabled (failure injection, deterministic replay) → upload `artifacts/**` for debugging → down.
+
+---
+
+## Runtime boundaries
+- Neo4j is used only by the graph gate; API/worker runtime does not depend on Neo4j.
+- Artifacts under `artifacts/runs/<run_id>/` are the canonical outputs; Postgres mirrors run state; manifests record fingerprints for determinism.
 
 ## Migrations (Alembic)
 - Upgrade to latest: `docker compose run --rm api alembic upgrade head`
