@@ -13,6 +13,19 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ARTIFACTS = REPO_ROOT / "artifacts"
 
 
+def _ensure_repo_path(path: Path) -> Path:
+    """Return an absolute path under REPO_ROOT or fail fast."""
+
+    if not path.is_absolute():
+        path = REPO_ROOT / path
+    path = path.resolve()
+    try:
+        path.relative_to(REPO_ROOT)
+    except ValueError:
+        raise SystemExit(f"Path {path} is outside repository root {REPO_ROOT}") from None
+    return path
+
+
 def _resolve_artifacts_root(arg: str | None) -> Path:
     if arg:
         return Path(arg)
@@ -51,13 +64,15 @@ def pack_capsule(run_id: str | None, artifacts_root: Path) -> Path:
             if not path.exists():
                 continue
             if path.is_file():
-                arcname = path.relative_to(REPO_ROOT)
-                zf.write(path, arcname)
+                resolved = _ensure_repo_path(path)
+                arcname = resolved.relative_to(REPO_ROOT)
+                zf.write(resolved, arcname)
             else:
                 for p in path.rglob("*"):
                     if p.is_file():
-                        arcname = p.relative_to(REPO_ROOT)
-                        zf.write(p, arcname)
+                        resolved = _ensure_repo_path(p)
+                        arcname = resolved.relative_to(REPO_ROOT)
+                        zf.write(resolved, arcname)
 
     print(f"[capsule] created {capsule_path}")
     return capsule_path

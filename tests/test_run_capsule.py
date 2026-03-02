@@ -42,6 +42,21 @@ def test_pack_creates_capsule(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert "sentinelqa/contracts/contracts_index.json" in names
 
 
+def test_pack_handles_relative_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    repo, _ = _setup_repo(tmp_path)
+    monkeypatch.setattr(run_capsule, "REPO_ROOT", repo)
+    monkeypatch.chdir(repo)
+
+    artifacts_root = Path("artifacts")  # relative on purpose
+    capsule_path = run_capsule.pack_capsule(None, artifacts_root)
+    assert capsule_path.exists()
+
+    with zipfile.ZipFile(capsule_path) as zf:
+        names = zf.namelist()
+
+    assert "artifacts/latest_seed_run_id" in names
+
+
 def test_replay_invokes_gates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     repo, _ = _setup_repo(tmp_path)
     monkeypatch.setattr(run_capsule, "REPO_ROOT", repo)
