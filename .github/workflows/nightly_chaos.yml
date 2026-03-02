@@ -32,7 +32,12 @@ jobs:
         run: docker compose build
 
       - name: Start services
-        run: docker compose up -d postgres redis neo4j
+        run: docker compose up -d postgres redis neo4j api worker
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
+        run: docker compose run --rm api alembic upgrade head
 
       - name: Wait for api health
         run: docker compose run --rm api python -m sentinelqa.ci.wait_http --url http://api:8000/health --timeout 180
