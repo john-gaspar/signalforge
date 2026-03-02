@@ -3,3 +3,9 @@ latency_ms:
   max: 30000
 alerts_sent:
   min: 1
+trend:
+  window: 10
+  min_history: 5
+  max_negative_f1_slope: -0.001
+  max_negative_pass_slope: -0.001
+  max_positive_latency_slope: 1.0

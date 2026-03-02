@@ -10,6 +10,7 @@
     "contract_index",
     "graph",
     "bench",
+    "trend_regression",
     "dq",
     "qa",
     "schema_compat",

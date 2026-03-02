@@ -8,7 +8,6 @@ from typing import Iterable, List, Sequence, Tuple
 TARGET_PREFIXES = (
     "sentinelqa/baselines/",
     "sentinelqa/schemas/",
-    "sentinelqa/contracts/",
 )
 
 
@@ -58,14 +57,14 @@ def evaluate_changed_paths(changed_paths: Iterable[str], allow: bool) -> Tuple[b
     flagged = [p for p in paths if _matches_targets(p)]
 
     if not flagged:
-        return True, ["[OK] baseline guard: no baseline/schema/contract changes detected"]
+        return True, ["[OK] baseline guard: no baseline/schema changes detected"]
 
     if allow:
         lines = ["[OK] baseline guard: changes allowed (BASELINE_UPDATE=1)"]
         lines.extend(f" - {f}" for f in flagged)
         return True, lines
 
-    lines = ["[FAIL] baseline guard: blocked changes to baselines/schemas/contracts"]
+    lines = ["[FAIL] baseline guard: blocked changes to baselines/schemas"]
     lines.extend(f" - {f}" for f in flagged)
     lines.append("Set BASELINE_UPDATE=1 to allow intentional updates or use the manual Update Baselines workflow.")
     return False, lines

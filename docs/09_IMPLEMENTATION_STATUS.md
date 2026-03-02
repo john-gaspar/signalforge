@@ -75,6 +75,7 @@ Throughput measurement — ✅ Implemented
 Structured logging — ⚠️ Minimal  
 Metrics instrumentation — ⚠️ Minimal  
 Tracing — ⛔ Not implemented  
+Trend regression gate (bench history slope) — ✅ Implemented  
 
 ---
 

@@ -42,13 +42,22 @@ def test_missing_result_triggers_generation(monkeypatch, tmp_path: Path):
 
     def fake_run(base_url, fixtures_dir, out_path):
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        write(out_path, {"cases_total": 1, "cases_succeeded": 1, "p95_latency_ms": 1})
+        write(
+            out_path,
+            {
+                "cases_total": 1,
+                "cases_succeeded": 1,
+                "p95_latency_ms": 1,
+                "run_id": "test-run",
+            },
+        )
         return json.loads(out_path.read_text())
 
     monkeypatch.setenv("BENCH_BASELINE_PATH", str(baseline_path))
     monkeypatch.setenv("BENCH_RESULT_PATH", str(result_path))
     monkeypatch.setenv("BENCH_FIXTURES", str(fixtures))
     monkeypatch.setenv("BENCH_BASE_URL", "http://api:8000")
+    monkeypatch.setenv("BENCH_HISTORY_PATH", str(tmp_path / "artifacts/bench/history.jsonl"))
     monkeypatch.setattr(bench_gate, "run_benchmark", fake_run)
 
     import pytest

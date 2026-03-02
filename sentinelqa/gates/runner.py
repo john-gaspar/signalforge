@@ -14,6 +14,7 @@ DEFAULT_ORDER = [
     "contract_index",
     "graph",
     "bench",
+    "trend_regression",
     "dq",
     "qa",
     "schema_compat",
@@ -29,6 +30,7 @@ DEFAULT_ORDER = [
 GATE_COMMANDS: Dict[str, List[str]] = {
     "graph": [sys.executable, "-m", "sentinelqa.gates.graph_gate"],
     "bench": [sys.executable, "-m", "sentinelqa.gates.bench_gate"],
+    "trend_regression": [sys.executable, "-m", "sentinelqa.gates.gate_trend_regression"],
     "dq": [sys.executable, "-m", "sentinelqa.dq.run"],
     "qa": [sys.executable, "sentinelqa/gates/gate.py"],
     "schema_compat": [sys.executable, "-m", "sentinelqa.gates.gate_schema_compat"],
