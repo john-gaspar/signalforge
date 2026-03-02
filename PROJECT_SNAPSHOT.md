@@ -49,6 +49,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Contract index gate (`sentinelqa/gates/gate_contract_index.py`) enforces canonical contracts_index.json for gate ordering, required artifacts, schemas, and baselines.
 - Diagnose CLI (`sentinelqa/cli/diagnose.py`) summarizes run evidence (gates, manifest, schema, SLO, replay) for triage.
 - Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) compares run manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json`, recorded as informational gate in the runner order.
+- Baseline governance: CI blocks edits to baselines/schemas/contracts via `sentinelqa/ci/check_baseline_changes.py` unless `BASELINE_UPDATE=1`; manual `update_baselines.yml` workflow regenerates evidence bundle and optional bench baseline.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
