@@ -8,9 +8,12 @@ on:
 jobs:
   perf:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python (for helper scripts)
         uses: actions/setup-python@v5
@@ -19,8 +22,10 @@ jobs:
 
       - name: Write .env
         env:
-          ARTIFACTS_DIR: ${{ secrets.ARTIFACTS_DIR }}
-          RQ_QUEUE_NAME: ${{ secrets.RQ_QUEUE_NAME }}
+          DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
+          REDIS_URL: redis://redis:6379/0
+          ARTIFACTS_DIR: artifacts
+          RQ_QUEUE_NAME: signalforge
         run: python -m sentinelqa.ci.write_env --path .env
 
       - name: Install Docker Compose v2
@@ -29,14 +34,59 @@ jobs:
       - name: Build images
         run: docker compose build
 
-      - name: Start services (db + redis)
-        run: docker compose up -d postgres redis api worker
+      - name: Start services (db + redis + neo4j + api + worker)
+        run: docker compose up -d postgres redis neo4j api worker
 
       - name: Wait for api health
-        run: docker compose run --rm api python -m sentinelqa.ci.wait_http --url http://api:8000/health --timeout 180
+        run: docker compose run --rm -T api python -m sentinelqa.ci.wait_http --url http://api:8000/health --timeout 180
+
+      - name: Ensure artifacts dir
+        run: mkdir -p artifacts
 
       - name: Seed warmup run
-        run: docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+        run: docker compose run --rm -T api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+        # ensure seed wrote the latest run id
+      - name: Assert latest seed id
+        run: test -s artifacts/latest_seed_run_id
 
       - name: Clean load artifacts
         run: rm -rf artifacts/load && mkdir -p artifacts/load
+
+      - name: Gate runner (perf)
+        env:
+          BENCH_BASELINE_PATH: sentinelqa/baselines/bench_baseline.json
+          EVIDENCE_DIFF_MODE: fail
+        run: |
+          test -s artifacts/latest_seed_run_id
+          docker compose run --rm -T api python -m sentinelqa.gates.runner
+
+      - name: Dump compose logs on failure
+        if: failure()
+        run: |
+          docker compose ps
+          echo "--- API logs ---"
+          docker compose logs --no-color --tail=200 api || true
+          echo "--- Worker logs ---"
+          docker compose logs --no-color --tail=200 worker || true
+          echo "--- Postgres logs ---"
+          docker compose logs --no-color --tail=200 postgres || true
+          echo "--- Redis logs ---"
+          docker compose logs --no-color --tail=200 redis || true
+          echo "--- Neo4j logs ---"
+          docker compose logs --no-color --tail=200 neo4j || true
+
+      - name: CI diagnosis
+        if: always()
+        run: docker compose run --rm -T api python -m sentinelqa.ci.diagnose_ci
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: artifacts/**
+          retention-days: 7
+
+      - name: Stop services
+        if: always()
+        run: docker compose down
