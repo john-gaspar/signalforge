@@ -96,12 +96,22 @@ jobs:
 
       - name: Create run capsule
         if: always()
-        run: docker compose run --rm -T api python -m sentinelqa.cli.run_capsule pack
+        run: |
+          mkdir -p artifacts
+          if [ ! -s artifacts/latest_seed_run_id ]; then
+            echo "[SKIP] run capsule: artifacts/latest_seed_run_id missing (likely early exit on baseline guard)."
+            exit 0
+          fi
+          docker compose run --rm -T api python -m sentinelqa.cli.run_capsule pack
 
       - name: CI diagnosis
         if: always()
         run: |
           if [ ! -f .env ]; then echo ".env missing; skipping diagnosis"; exit 0; fi
+          if [ ! -s artifacts/latest_seed_run_id ]; then
+            echo "[SKIP] diagnosis: artifacts/latest_seed_run_id missing (likely early exit on baseline guard)."
+            exit 0
+          fi
           docker compose run --rm -T api python -m sentinelqa.ci.diagnose_ci
 
       - name: Run tests
