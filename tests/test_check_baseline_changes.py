@@ -8,35 +8,30 @@ def test_no_changes_ok():
     assert "no protected" in lines[0]
 
 
-def test_new_schema_allowed_without_flag():
-    changed = [("A", "sentinelqa/schemas/new_schema.json")]
-    ok, lines = evaluate_changed_paths(changed, allow=False)
-    assert ok
-    assert "new_schema.json" not in "\n".join(lines)
-
-
-def test_modified_schema_blocked_without_flag():
+def test_protected_change_without_marker_fails():
     changed = [("M", "sentinelqa/schemas/events_v1.json")]
     ok, lines = evaluate_changed_paths(changed, allow=False)
     assert not ok
-    assert "modified" in "\n".join(lines)
+    assert "protected changes require intent marker" in lines[0]
     assert "events_v1.json" in "\n".join(lines)
 
 
-def test_new_contract_blocked_without_flag():
-    changed = [("A", "sentinelqa/contracts/new_contract.json")]
+def test_protected_change_with_marker_passes():
+    changed = [("M", "sentinelqa/contracts/contracts_index.json"), ("A", ".baseline_update_intent")]
+    ok, lines = evaluate_changed_paths(changed, allow=False)
+    assert ok
+    assert ".baseline_update_intent" in "\n".join(lines)
+
+
+def test_new_schema_without_marker_fails():
+    changed = [("A", "sentinelqa/schemas/new_schema.json")]
     ok, lines = evaluate_changed_paths(changed, allow=False)
     assert not ok
-    assert "added-not-allowed" in "\n".join(lines)
+    assert "new_schema.json" in "\n".join(lines)
 
 
-def test_all_allowed_with_flag():
-    changed = [
-        ("A", "sentinelqa/schemas/new_schema.json"),
-        ("M", "sentinelqa/schemas/events_v1.json"),
-        ("A", "sentinelqa/contracts/new_contract.json"),
-        ("M", "sentinelqa/baselines/foo.json"),
-    ]
+def test_allows_with_env_override():
+    changed = [("M", "sentinelqa/baselines/foo.json")]
     ok, lines = evaluate_changed_paths(changed, allow=True)
     assert ok
-    assert lines[0].startswith("[OK]")
+    assert "BASELINE_UPDATE=1" in lines[0]

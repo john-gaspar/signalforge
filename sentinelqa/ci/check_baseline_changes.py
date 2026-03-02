@@ -65,36 +65,21 @@ def _matches_targets(path: str) -> bool:
 def evaluate_changed_paths(changed_paths: Iterable[Tuple[str, str]], allow: bool) -> Tuple[bool, List[str]]:
     changes = [(s, p) for s, p in changed_paths if p]
 
-    if allow:
-        flagged = [(s, p) for s, p in changes if _matches_targets(p)]
-        if not flagged:
-            return True, ["[OK] baseline guard: no protected changes detected"]
-        lines = ["[OK] baseline guard: changes allowed (BASELINE_UPDATE=1)"]
-        lines.extend(f" - {s} {p}" for s, p in flagged)
-        return True, lines
+    protected = [(s, p) for s, p in changes if _matches_targets(p)]
+    has_marker = any(p == ".baseline_update_intent" for _, p in changes)
 
-    blocked: List[str] = []
-    for status, path in changes:
-        if not _matches_targets(path):
-            continue
-        is_schema = path.startswith("sentinelqa/schemas/")
-
-        if status.upper().startswith("A"):
-            if is_schema:
-                # Allow new schema files without the flag
-                continue
-            blocked.append(f"added-not-allowed: {path}")
-        elif status.upper().startswith("D"):
-            blocked.append(f"deleted: {path}")
-        else:  # modifications / renames
-            blocked.append(f"modified: {path}")
-
-    if not blocked:
+    if not protected:
         return True, ["[OK] baseline guard: no protected changes detected"]
 
-    lines = ["[FAIL] baseline guard: blocked protected changes"]
-    lines.extend(f" - {b}" for b in blocked)
-    lines.append("Set BASELINE_UPDATE=1 to allow intentional updates or use the manual Update Baselines workflow.")
+    if allow or has_marker:
+        reason = "BASELINE_UPDATE=1" if allow else ".baseline_update_intent present"
+        lines = [f"[OK] baseline guard: protected changes acknowledged via {reason}"]
+        lines.extend(f" - {s} {p}" for s, p in protected)
+        return True, lines
+
+    lines = ["[FAIL] baseline guard: protected changes require intent marker"]
+    lines.extend(f" - {s} {p}" for s, p in protected)
+    lines.append("Modify .baseline_update_intent in the same PR to acknowledge intentional baseline/schema/contract evolution.")
     return False, lines
 
 
