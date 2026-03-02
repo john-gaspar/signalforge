@@ -29,7 +29,7 @@ jobs:
           RQ_QUEUE_NAME: signalforge
         run: python -m sentinelqa.ci.write_env --path .env
 
-      - name: Guard baseline/schema/contract changes
+      - name: Guard baseline/schema changes
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
