@@ -15,6 +15,7 @@ from sentinelqa.dq.checks import check_artifact_invariants
 from sentinelqa.artifacts.manifest import write_manifest
 
 REQUIRED_FILES = [
+    "tickets.json",
     "events.json",
     "clusters.json",
     "summary.json",

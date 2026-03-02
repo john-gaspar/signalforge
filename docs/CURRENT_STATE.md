@@ -28,11 +28,11 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 - Load gate (`sentinelqa/gates/load_gate.py`) — **implemented**, enforces Locust-based load thresholds using `artifacts/load/latest.json` and baseline `sentinelqa/baselines/load_baseline.json`; only runs in perf workflow/manual.
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) — **implemented**, enforces legal run status progression plus required artifacts and bench report presence for completed runs.
 - Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) — **implemented**, informational comparison of manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json` in the run directory.
-- Baseline change guard (`sentinelqa/ci/check_baseline_changes.py`) — **implemented**, CI fails if baselines/schemas/contracts change unless `BASELINE_UPDATE=1`.
+- Baseline change guard (`sentinelqa/ci/check_baseline_changes.py`) — **implemented**, CI fails if baselines/schemas/contracts change unless `.baseline_update_intent` is modified in the PR (or `BASELINE_UPDATE=1` emergency override).
 - CI diagnosis (`sentinelqa/ci/diagnose_ci.py`) — **implemented**, always prints seeded run summary and uploads artifacts/ on CI for debugging.
 
 ## CI/CD (see .github/workflows/ci.yml)
-1) Baseline guard blocks baseline/schema/contract edits unless `BASELINE_UPDATE=1`  
+1) Baseline guard blocks baseline/schema/contract edits unless `.baseline_update_intent` is modified in the PR (or `BASELINE_UPDATE=1` emergency override)  
 2) Build images  
 3) Start Postgres/Redis  
 4) Run migrations  

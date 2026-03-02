@@ -5,35 +5,33 @@ def test_no_changes_ok():
     ok, lines = evaluate_changed_paths([], allow=False)
     assert ok
     assert "[OK]" in lines[0]
-    assert "no baseline" in lines[0]
+    assert "no protected" in lines[0]
 
 
-def test_blocks_baseline_change_without_env():
-    changed = ["sentinelqa/baselines/foo.json", "other/file.py"]
+def test_protected_change_without_marker_fails():
+    changed = [("M", "sentinelqa/schemas/events_v1.json")]
     ok, lines = evaluate_changed_paths(changed, allow=False)
     assert not ok
-    assert lines[0].startswith("[FAIL]")
-    assert "foo.json" in "\n".join(lines)
-
-
-def test_blocks_schema_change_without_env():
-    changed = ["sentinelqa/schemas/events_v1.json"]
-    ok, lines = evaluate_changed_paths(changed, allow=False)
-    assert not ok
+    assert "protected changes require intent marker" in lines[0]
     assert "events_v1.json" in "\n".join(lines)
 
 
-def test_allows_contract_changes_without_flag():
-    changed = ["sentinelqa/contracts/contracts_index.json"]
+def test_protected_change_with_marker_passes():
+    changed = [("M", "sentinelqa/contracts/contracts_index.json"), ("A", ".baseline_update_intent")]
     ok, lines = evaluate_changed_paths(changed, allow=False)
     assert ok
-    assert "contracts_index.json" not in "\n".join(lines)
+    assert ".baseline_update_intent" in "\n".join(lines)
 
 
-def test_allows_protected_changes_with_env():
-    changed = ["sentinelqa/baselines/foo.json", "sentinelqa/schemas/events_v1.json"]
+def test_new_schema_without_marker_fails():
+    changed = [("A", "sentinelqa/schemas/new_schema.json")]
+    ok, lines = evaluate_changed_paths(changed, allow=False)
+    assert not ok
+    assert "new_schema.json" in "\n".join(lines)
+
+
+def test_allows_with_env_override():
+    changed = [("M", "sentinelqa/baselines/foo.json")]
     ok, lines = evaluate_changed_paths(changed, allow=True)
     assert ok
-    assert lines[0].startswith("[OK]")
-    assert "foo.json" in "\n".join(lines)
-    assert "events_v1.json" in "\n".join(lines)
+    assert "BASELINE_UPDATE=1" in lines[0]

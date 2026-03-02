@@ -1,5 +1,6 @@
 {
   "required_artifacts": [
+    "tickets.json",
     "events.json",
     "clusters.json",
     "summary.json",
@@ -24,6 +25,7 @@
   ],
   "bench_baseline_path": "sentinelqa/baselines/bench_baseline.json",
   "schemas_v1": {
+    "tickets.json": "sentinelqa/schemas/tickets_v1.json",
     "events.json": "sentinelqa/schemas/events_v1.json",
     "clusters.json": "sentinelqa/schemas/clusters_v1.json",
     "summary.json": "sentinelqa/schemas/summary_v1.json",

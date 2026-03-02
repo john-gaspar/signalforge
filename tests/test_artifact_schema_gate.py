@@ -10,6 +10,24 @@ from sentinelqa.gates.gate_artifact_schema import _discover_run
 
 def _write_valid_artifacts(run_dir: Path, run_id: str):
     run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "tickets.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "tickets": [
+                    {
+                        "id": "t1",
+                        "subject": "s",
+                        "description": "d",
+                        "created_at": "now",
+                        "updated_at": "now",
+                        "tags": [],
+                        "status": "open",
+                    }
+                ],
+            }
+        )
+    )
     (run_dir / "events.json").write_text(json.dumps([{"event_id": "e1", "source": "fixture", "normalized": {"subject": "", "body": ""}, "raw_file": "f"}]))
     (run_dir / "clusters.json").write_text(json.dumps([{"cluster_id": "c1", "members": ["e1"]}]))
     (run_dir / "summary.json").write_text(json.dumps({"issue": "x", "cluster_count": 1, "evidence": [{"cluster_id": "c1", "members": ["e1"]}]}))

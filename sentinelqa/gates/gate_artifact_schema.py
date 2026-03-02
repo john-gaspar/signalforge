@@ -10,6 +10,7 @@ from jsonschema import Draft7Validator
 
 SCHEMA_DIR = Path(__file__).resolve().parents[1] / "schemas"
 REQUIRED_FILES = {
+    "tickets.json": "tickets_v1.json",
     "events.json": "events_v1.json",
     "clusters.json": "clusters_v1.json",
     "summary.json": "summary_v1.json",

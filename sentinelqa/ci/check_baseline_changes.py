@@ -8,6 +8,7 @@ from typing import Iterable, List, Sequence, Tuple
 TARGET_PREFIXES = (
     "sentinelqa/baselines/",
     "sentinelqa/schemas/",
+    "sentinelqa/contracts/",
 )
 
 
@@ -34,8 +35,8 @@ def _merge_base() -> str | None:
         return None
 
 
-def _changed_files(base: str | None) -> List[str]:
-    args = ["diff", "--name-only"]
+def _changed_files(base: str | None) -> List[Tuple[str, str]]:
+    args = ["diff", "--name-status"]
     if base:
         args.extend([base, "HEAD"])
     else:
@@ -45,28 +46,40 @@ def _changed_files(base: str | None) -> List[str]:
         output = _run_git(args)
     except subprocess.CalledProcessError as exc:  # type: ignore[misc]
         raise RuntimeError(f"git diff failed: {exc.stderr}") from exc  # noqa: B904
-    return [line.strip() for line in output.splitlines() if line.strip()]
+    changes: List[Tuple[str, str]] = []
+    for line in output.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(maxsplit=1)
+        if len(parts) != 2:
+            continue
+        status, path = parts
+        changes.append((status, path.strip()))
+    return changes
 
 
 def _matches_targets(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in TARGET_PREFIXES)
 
 
-def evaluate_changed_paths(changed_paths: Iterable[str], allow: bool) -> Tuple[bool, List[str]]:
-    paths = [p for p in changed_paths if p]
-    flagged = [p for p in paths if _matches_targets(p)]
+def evaluate_changed_paths(changed_paths: Iterable[Tuple[str, str]], allow: bool) -> Tuple[bool, List[str]]:
+    changes = [(s, p) for s, p in changed_paths if p]
 
-    if not flagged:
-        return True, ["[OK] baseline guard: no baseline/schema changes detected"]
+    protected = [(s, p) for s, p in changes if _matches_targets(p)]
+    has_marker = any(p == ".baseline_update_intent" for _, p in changes)
 
-    if allow:
-        lines = ["[OK] baseline guard: changes allowed (BASELINE_UPDATE=1)"]
-        lines.extend(f" - {f}" for f in flagged)
+    if not protected:
+        return True, ["[OK] baseline guard: no protected changes detected"]
+
+    if allow or has_marker:
+        reason = "BASELINE_UPDATE=1" if allow else ".baseline_update_intent present"
+        lines = [f"[OK] baseline guard: protected changes acknowledged via {reason}"]
+        lines.extend(f" - {s} {p}" for s, p in protected)
         return True, lines
 
-    lines = ["[FAIL] baseline guard: blocked changes to baselines/schemas"]
-    lines.extend(f" - {f}" for f in flagged)
-    lines.append("Set BASELINE_UPDATE=1 to allow intentional updates or use the manual Update Baselines workflow.")
+    lines = ["[FAIL] baseline guard: protected changes require intent marker"]
+    lines.extend(f" - {s} {p}" for s, p in protected)
+    lines.append("Modify .baseline_update_intent in the same PR to acknowledge intentional baseline/schema/contract evolution.")
     return False, lines
 
 

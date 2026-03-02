@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "tickets": [
+    {
+      "id": "1001",
+      "subject": "Login failures for EU users",
+      "description": "Several EU-based users report receiving 500 errors during login since 10:05 UTC. Impact appears to be growing.",
+      "created_at": "2026-02-23T10:15:00Z",
+      "updated_at": "2026-02-23T10:25:00Z",
+      "tags": ["login", "eu", "incident"],
+      "status": "open"
+    },
+    {
+      "id": "1000",
+      "subject": "Password reset emails delayed",
+      "description": "Password reset emails are delayed for some users. No bounce reports yet.",
+      "created_at": "2026-02-22T08:00:00Z",
+      "updated_at": "2026-02-22T08:10:00Z",
+      "tags": ["email", "password", "delay"],
+      "status": "pending"
+    }
+  ]
+}

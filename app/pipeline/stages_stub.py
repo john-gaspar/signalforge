@@ -2,17 +2,21 @@ import json
 from pathlib import Path
 from app.core.ids import stable_json, sha256_hex
 
-def load_fixture_events(config: dict, run_dir: Path) -> list[dict]:
+def load_fixture_events(config: dict, run_dir: Path, raw_tickets: list[dict] | None = None) -> list[dict]:
     fixtures_dir = Path(config.get("fixtures_dir", "fixtures/tickets"))
-    files = sorted(fixtures_dir.glob("*.json"))  # sorting = determinism
-
     events = []
-    for f in files:
-        raw = json.loads(f.read_text(encoding="utf-8"))
+
+    if raw_tickets is None:
+        files = sorted(fixtures_dir.glob("*.json"))  # sorting = determinism
+        raw_entries = [json.loads(f.read_text(encoding="utf-8")) for f in files]
+    else:
+        raw_entries = raw_tickets
+
+    for raw in raw_entries:
         normalized = normalize_ticket(raw)
         event_id = sha256_hex(stable_json(normalized))[:32]
-
-        ev = {"event_id": event_id, "source": "fixture", "normalized": normalized, "raw_file": str(f)}
+        raw_ref = str(raw.get("raw_file")) if isinstance(raw, dict) and raw.get("raw_file") else str(fixtures_dir)
+        ev = {"event_id": event_id, "source": "fixture", "normalized": normalized, "raw_file": raw_ref}
         events.append(ev)
 
     (run_dir / "events.json").write_text(json.dumps(events, indent=2, sort_keys=True), encoding="utf-8")
