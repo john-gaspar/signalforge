@@ -48,6 +48,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Deterministic replay gate (`sentinelqa/gates/gate_deterministic_replay.py`, opt-in) runs two identical replays and fails if manifest fingerprints diverge.
 - Contract index gate (`sentinelqa/gates/gate_contract_index.py`) enforces canonical contracts_index.json for gate ordering, required artifacts, schemas, and baselines.
 - Diagnose CLI (`sentinelqa/cli/diagnose.py`) summarizes run evidence (gates, manifest, schema, SLO, replay) for triage.
+- Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) compares run manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json`, recorded as informational gate in the runner order.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.

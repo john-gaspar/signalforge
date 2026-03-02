@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "run_id": "baseline",
+  "required": [
+    "events.json",
+    "clusters.json",
+    "summary.json",
+    "alert.json",
+    "metrics.json"
+  ],
+  "files": [
+    {
+      "path": "alert.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "bytes": 1
+    },
+    {
+      "path": "clusters.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "bytes": 1
+    },
+    {
+      "path": "events.json",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "bytes": 1
+    },
+    {
+      "path": "metrics.json",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "bytes": 1
+    },
+    {
+      "path": "summary.json",
+      "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "bytes": 1
+    }
+  ],
+  "fingerprint_sha256": "7f774b5572ca263651d4e4c2d159f7cdefd35b21001fbe05dbb00e449dc69206"
+}

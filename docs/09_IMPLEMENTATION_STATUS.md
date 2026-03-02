@@ -16,6 +16,7 @@ Metrics JSON output — ✅ Implemented
 SentinelQA metrics gate — ✅ Implemented  
 CI integration — ✅ Implemented  
 Run contract gate — ✅ Implemented  
+Evidence diff gate — ✅ Implemented (informational; writes evidence_diff.json)  
 
 ---
 

@@ -26,6 +26,7 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 - Graph gate (`sentinelqa/gates/graph_gate.py`) — **implemented**, persists stable artifact fields to Neo4j then enforces run/event/cluster edge invariants; waits for Neo4j readiness internally.
 - Load gate (`sentinelqa/gates/load_gate.py`) — **implemented**, enforces Locust-based load thresholds using `artifacts/load/latest.json` and baseline `sentinelqa/baselines/load_baseline.json`; only runs in perf workflow/manual.
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) — **implemented**, enforces legal run status progression plus required artifacts and bench report presence for completed runs.
+- Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) — **implemented**, informational comparison of manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json` in the run directory.
 
 ## CI/CD (see .github/workflows/ci.yml)
 1) Build images  
@@ -38,9 +39,11 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 8) Benchmark run + gate (golden fixtures vs baseline; generates `artifacts/bench/latest.json` if missing)  
 9) Data Quality gate (includes drift)  
 10) Metrics gate  
-11) Run contract gate  
-11) Pytest  
-12) Down services  
+11) Schema compatibility + artifact schema gates  
+12) Evidence diff gate (informational)  
+13) Run contract + manifest integrity + SLO gates  
+14) Pytest  
+15) Down services  
 Actionlint lint job uses docker image `rhysd/actionlint:1.7.0`.
 
 ## Performance / Load (separate workflow perf.yml)

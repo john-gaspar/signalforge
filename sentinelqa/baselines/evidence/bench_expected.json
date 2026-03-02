@@ -1,0 +1,9 @@
+{
+  "run_id": "baseline",
+  "cases_succeeded": 10,
+  "cases_total": 10,
+  "p95_latency_ms": 1500,
+  "accuracy": {
+    "f1": 0.9
+  }
+}
