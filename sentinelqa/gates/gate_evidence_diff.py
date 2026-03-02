@@ -210,6 +210,63 @@ def compute_diff(run_id: str, run_dir: Path, artifacts_root: Path, baseline_dir:
     return diff
 
 
+REQUIRED_ARTIFACTS = ["events.json", "clusters.json", "summary.json", "alert.json", "metrics.json"]
+
+
+def evaluate_breaking(diff: Dict[str, Any]) -> List[str]:
+    reasons: List[str] = []
+
+    manifest = diff.get("manifest") or {}
+    schema = diff.get("schema") or {}
+    bench = diff.get("bench") or {}
+
+    # Manifest availability
+    if manifest.get("status") != "ok":
+        reasons.append(f"manifest status={manifest.get('status')}")
+    else:
+        removed = manifest.get("removed") or []
+        baseline_files = (manifest.get("baseline_path") or "")  # placeholder if missing keys
+        # Ensure required artifacts not removed
+        for path in removed:
+            if path in REQUIRED_ARTIFACTS:
+                reasons.append(f"required artifact removed: {path}")
+        # Also block removal of anything that existed in baseline files list
+        baseline_manifest = _load_json(Path(manifest.get("baseline_path", ""))) if manifest.get("baseline_path") else None
+        if baseline_manifest:
+            baseline_paths = {f.get("path") for f in baseline_manifest.get("files", []) if isinstance(f, dict)}
+            for path in removed:
+                if path in baseline_paths:
+                    reasons.append(f"baseline artifact removed: {path}")
+
+    # Schema violations
+    if schema.get("status") == "missing":
+        reasons.append("schema_report missing")
+    else:
+        cur_errs = schema.get("current_errors")
+        base_errs = schema.get("baseline_errors")
+        if isinstance(cur_errs, int) and isinstance(base_errs, int) and cur_errs > base_errs:
+            reasons.append(f"schema errors increased: {base_errs} -> {cur_errs}")
+
+    # Bench regressions
+    bench_cur = (bench.get("current") or {}) if isinstance(bench, dict) else {}
+    bench_base = (bench.get("baseline") or {}) if isinstance(bench, dict) else {}
+    for key, comparator in (("pass_rate", float.__lt__), ("f1", float.__lt__), ("p95_latency_ms", float.__gt__)):
+        cur_val = bench_cur.get(key)
+        base_val = bench_base.get(key)
+        if cur_val is None or base_val is None:
+            continue
+        try:
+            cur_num = float(cur_val)
+            base_num = float(base_val)
+        except (TypeError, ValueError):
+            continue
+        if comparator(cur_num, base_num):
+            dir_text = "<" if comparator is float.__lt__ else ">"
+            reasons.append(f"bench {key} regressed: {cur_num} {dir_text} {base_num}")
+
+    return reasons
+
+
 def _fmt_list(items: List[str]) -> str:
     return ", ".join(items) if items else "none"
 
@@ -260,7 +317,10 @@ def main() -> None:
     parser.add_argument("--run-id", help="Run id (optional; defaults to artifacts/latest_seed_run_id)")
     parser.add_argument("--artifacts-dir", help="Artifacts root (default ./artifacts)")
     parser.add_argument("--baseline-dir", help="Override evidence baseline directory")
+    parser.add_argument("--mode", choices=["report", "fail"], default="report", help="report=informational, fail=enforce breaking changes")
     args = parser.parse_args()
+
+    mode = os.getenv("EVIDENCE_DIFF_MODE", args.mode)
 
     artifacts_root = _resolve_artifacts_root(args.artifacts_dir)
     baseline_dir = _resolve_baseline_dir(args.baseline_dir)
@@ -268,6 +328,18 @@ def main() -> None:
         run_id, run_dir = _resolve_run_id(args.run_id, artifacts_root)
         diff = compute_diff(run_id, run_dir, artifacts_root, baseline_dir)
         _print_summary(diff)
+
+        if os.getenv("BASELINE_UPDATE") == "1":
+            print("[ALLOW] baseline update mode (BASELINE_UPDATE=1)")
+            sys.exit(0)
+
+        if mode == "fail":
+            reasons = evaluate_breaking(diff)
+            if reasons:
+                print("[FAIL] evidence diff breaking changes:")
+                for r in reasons:
+                    print(f" - {r}")
+                sys.exit(1)
     except Exception as exc:  # noqa: BLE001
         print(f"[FAIL] evidence diff: {exc}")
         sys.exit(1)

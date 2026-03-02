@@ -88,6 +88,7 @@ jobs:
       - name: Gate runner
         env:
           BENCH_BASELINE_PATH: sentinelqa/baselines/bench_baseline.json
+          EVIDENCE_DIFF_MODE: fail
         run: |
           test -s artifacts/latest_seed_run_id
           docker compose run --rm api python -m sentinelqa.gates.runner

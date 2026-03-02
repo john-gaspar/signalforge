@@ -52,6 +52,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Baseline governance: CI blocks edits to baselines/schemas/contracts via `sentinelqa/ci/check_baseline_changes.py` unless `BASELINE_UPDATE=1`; manual `update_baselines.yml` workflow regenerates evidence bundle and optional bench baseline.
 - PR CI always prints seeded-run diagnosis (`sentinelqa/ci/diagnose_ci.py`) and uploads `artifacts/` for postmortem debugging.
 - CI env writing is fork-safe: `write_env.py` ignores empty env vars and CI supplies non-secret defaults for ARTIFACTS_DIR/RQ_QUEUE_NAME.
+- Evidence diff enforced in CI: gate runs in `fail` mode; breaking diffs fail unless `BASELINE_UPDATE=1` is set for intentional updates.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
