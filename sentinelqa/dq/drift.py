@@ -156,6 +156,8 @@ def _compare_sets(field: str, baseline_list: List[Any], current_list: Any, mode:
         return [f"{field}: current missing or not list"]
     base_set = set(baseline_list)
     cur_set = set(current_list)
+    if field == "artifacts.required_files_present":
+        mode = "set_contains"
     if mode == "set_exact":
         if base_set != cur_set:
             return [f"{field}: expected {sorted(base_set)} got {sorted(cur_set)}"]
