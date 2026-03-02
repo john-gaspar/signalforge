@@ -1,8 +1,9 @@
 {
   "files": [
     "sentinelqa/contracts/contracts_index.json",
-    "sentinelqa/schemas/tickets_v1.json"
+    "sentinelqa/schemas/tickets_v1.json",
+    "sentinelqa/baselines/drift_baseline.json"
   ],
-  "reason": "Intentional schema/contract additions for tickets artifact",
+  "reason": "Intentional schema/contract additions and drift baseline mode update for tickets artifact",
   "timestamp_utc": "2026-03-02T00:00:00Z"
 }

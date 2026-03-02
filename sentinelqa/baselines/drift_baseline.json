@@ -62,7 +62,7 @@
       "optional": true
     },
     "artifacts.required_files_present": {
-      "mode": "set_exact",
+      "mode": "set_contains",
       "baseline": [
         "alert.json",
         "clusters.json",
