@@ -1,0 +1,8 @@
+{
+  "files": [
+    "sentinelqa/contracts/contracts_index.json",
+    "sentinelqa/schemas/tickets_v1.json"
+  ],
+  "reason": "Acknowledge schema/contract updates for tickets artifact",
+  "timestamp_utc": "2026-03-02T00:00:00Z"
+}

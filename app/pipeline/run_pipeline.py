@@ -70,7 +70,10 @@ def run_pipeline(run_id: str, config: dict) -> dict:
     tickets = ticket_source.fetch(limit=_ticket_limit())
     _write_tickets_artifact(run_dir, tickets)
 
-    events = load_fixture_events(config=config, run_dir=run_dir, raw_tickets=_tickets_to_raw_events(tickets))
+    if os.getenv("TICKETS_CONSUME") == "1":
+        events = load_fixture_events(config=config, run_dir=run_dir, raw_tickets=_tickets_to_raw_events(tickets))
+    else:
+        events = load_fixture_events(config=config, run_dir=run_dir)
     clusters = cluster_stub(events=events, run_dir=run_dir)
     summary = summarize_stub(clusters=clusters, run_dir=run_dir)
     alert = alert_stub(summary=summary, run_dir=run_dir)
