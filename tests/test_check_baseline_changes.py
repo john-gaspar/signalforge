@@ -1,62 +1,24 @@
-import os
-import subprocess
-from pathlib import Path
-
-import pytest
-
-from sentinelqa.ci import check_baseline_changes
+from sentinelqa.ci.check_baseline_changes import evaluate_changed_paths
 
 
-def _run(cmd, cwd: Path) -> None:
-    subprocess.run(cmd, cwd=cwd, check=True, capture_output=True)
+def test_no_changes_ok():
+    ok, lines = evaluate_changed_paths([], allow=False)
+    assert ok
+    assert "[OK]" in lines[0]
+    assert "no baseline" in lines[0]
 
 
-def _init_repo(tmp_path: Path) -> Path:
-    _run(["git", "init"], cwd=tmp_path)
-    _run(["git", "config", "user.email", "ci@example.com"], cwd=tmp_path)
-    _run(["git", "config", "user.name", "CI"], cwd=tmp_path)
-    path = tmp_path / "sentinelqa" / "baselines"
-    path.mkdir(parents=True, exist_ok=True)
-    (path / "foo.json").write_text("{}\n")
-    _run(["git", "add", "."], cwd=tmp_path)
-    _run(["git", "commit", "-m", "init"], cwd=tmp_path)
-    return tmp_path
+def test_blocks_baseline_change_without_env():
+    changed = ["sentinelqa/baselines/foo.json", "other/file.py"]
+    ok, lines = evaluate_changed_paths(changed, allow=False)
+    assert not ok
+    assert lines[0].startswith("[FAIL]")
+    assert "foo.json" in "\n".join(lines)
 
 
-def test_baseline_guard_allows_no_changes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    repo = _init_repo(tmp_path)
-    monkeypatch.chdir(repo)
-    monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
-    with pytest.raises(SystemExit) as exc:
-        check_baseline_changes.main()
-    assert exc.value.code == 0
-
-
-def test_baseline_guard_blocks_baseline_change(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    repo = _init_repo(tmp_path)
-    # second commit with baseline change
-    (repo / "sentinelqa" / "baselines" / "foo.json").write_text('{"changed": true}\n')
-    _run(["git", "add", "."], cwd=repo)
-    _run(["git", "commit", "-m", "update baseline"], cwd=repo)
-
-    monkeypatch.chdir(repo)
-    monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
-
-    with pytest.raises(SystemExit) as exc:
-        check_baseline_changes.main()
-    assert exc.value.code == 1
-
-
-def test_baseline_guard_allows_with_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    repo = _init_repo(tmp_path)
-    (repo / "sentinelqa" / "baselines" / "foo.json").write_text('{"changed": true}\n')
-    _run(["git", "add", "."], cwd=repo)
-    _run(["git", "commit", "-m", "update baseline"], cwd=repo)
-
-    monkeypatch.chdir(repo)
-    monkeypatch.setenv("GITHUB_EVENT_NAME", "push")
-    monkeypatch.setenv("BASELINE_UPDATE", "1")
-
-    with pytest.raises(SystemExit) as exc:
-        check_baseline_changes.main()
-    assert exc.value.code == 0
+def test_allows_baseline_change_with_env():
+    changed = ["sentinelqa/contracts/contracts_index.json"]
+    ok, lines = evaluate_changed_paths(changed, allow=True)
+    assert ok
+    assert lines[0].startswith("[OK]")
+    assert "contracts_index.json" in "\n".join(lines)

@@ -3,8 +3,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from pathlib import Path
-from typing import List, Sequence
+from typing import Iterable, List, Sequence, Tuple
 
 TARGET_PREFIXES = (
     "sentinelqa/baselines/",
@@ -54,30 +53,37 @@ def _matches_targets(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in TARGET_PREFIXES)
 
 
+def evaluate_changed_paths(changed_paths: Iterable[str], allow: bool) -> Tuple[bool, List[str]]:
+    paths = [p for p in changed_paths if p]
+    flagged = [p for p in paths if _matches_targets(p)]
+
+    if not flagged:
+        return True, ["[OK] baseline guard: no baseline/schema/contract changes detected"]
+
+    if allow:
+        lines = ["[OK] baseline guard: changes allowed (BASELINE_UPDATE=1)"]
+        lines.extend(f" - {f}" for f in flagged)
+        return True, lines
+
+    lines = ["[FAIL] baseline guard: blocked changes to baselines/schemas/contracts"]
+    lines.extend(f" - {f}" for f in flagged)
+    lines.append("Set BASELINE_UPDATE=1 to allow intentional updates or use the manual Update Baselines workflow.")
+    return False, lines
+
+
 def main() -> None:
     try:
         base = _merge_base()
         files = _changed_files(base)
+        allow = os.getenv("BASELINE_UPDATE") == "1"
+        ok, lines = evaluate_changed_paths(files, allow)
     except Exception as exc:  # noqa: BLE001
         print(f"[FAIL] baseline guard: {exc}")
         sys.exit(1)
 
-    flagged = [f for f in files if _matches_targets(f)]
-    if not flagged:
-        print("[OK] baseline guard: no baseline/schema/contract changes detected")
-        sys.exit(0)
-
-    if os.getenv("BASELINE_UPDATE") == "1":
-        print("[OK] baseline guard: changes allowed (BASELINE_UPDATE=1)")
-        for f in flagged:
-            print(f" - {f}")
-        sys.exit(0)
-
-    print("[FAIL] baseline guard: blocked changes to baselines/schemas/contracts")
-    for f in flagged:
-        print(f" - {f}")
-    print("Set BASELINE_UPDATE=1 to allow intentional updates or use the manual Update Baselines workflow.")
-    sys.exit(1)
+    for line in lines:
+        print(line)
+    sys.exit(0 if ok else 1)
 
 
 if __name__ == "__main__":
