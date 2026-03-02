@@ -12,6 +12,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python (for helper scripts)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Write .env
+        env:
+          ARTIFACTS_DIR: ${{ secrets.ARTIFACTS_DIR }}
+          RQ_QUEUE_NAME: ${{ secrets.RQ_QUEUE_NAME }}
+        run: python -m sentinelqa.ci.write_env --path .env
+
       - name: Install Docker Compose v2
         uses: docker/setup-buildx-action@v3
 

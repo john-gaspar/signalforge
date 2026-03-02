@@ -82,17 +82,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  checkout[Checkout + snapshot guard] --> env[Write .env (sentinelqa.ci.write_env)]
+  checkout[Checkout + snapshot guard] --> env[Write .env - sentinelqa.ci.write_env]
   env --> build[Build images]
   build --> start[Start postgres/redis/neo4j]
   start --> waitpg[Wait TCP postgres:5432]
   waitpg --> migrate[Alembic upgrade head]
   migrate --> services[Start api + worker]
-  services --> health[Wait api health (sentinelqa.ci.wait_http)]
+  services --> health[Wait api health - sentinelqa.ci.wait_http]
   health --> seed[Seed run via API]
-  seed --> gpstatic[Graph preflight (static)]
-  gpstatic --> gpruntime[Graph preflight (runtime)]
-  gpruntime --> gates[Gate runner (graph→bench→dq→qa→schema_compat→artifact_schema→failure_injection→deterministic_replay→run_contract→manifest_integrity→slo)]
+  seed --> gpstatic[Graph preflight - static]
+  gpstatic --> gpruntime[Graph preflight - runtime]
+  gpruntime --> gates[Gate runner - graph -> bench -> dq -> qa -> schema -> metrics]
   gates --> pytest[Pytest]
   pytest --> down[Compose down]
 ```
