@@ -102,3 +102,27 @@ def test_deterministic_env_content_omits_unset_optionals():
         "DATABASE_URL=postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge",
         "REDIS_URL=redis://redis:6379/0",
     ]
+
+
+def test_write_env_ignores_empty_optionals(tmp_path: Path):
+    env = {
+        "ARTIFACTS_DIR": "",
+        "RQ_QUEUE_NAME": "   ",
+    }
+    out = tmp_path / ".env"
+    write_env(out, env)
+    content = out.read_text().splitlines()
+    assert content == [
+        "DATABASE_URL=postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge",
+        "REDIS_URL=redis://redis:6379/0",
+    ]
+
+
+def test_write_env_falls_back_on_empty_required(tmp_path: Path):
+    env = {
+        "DATABASE_URL": "",
+    }
+    out = tmp_path / ".env"
+    write_env(out, env)
+    content = out.read_text().splitlines()
+    assert content[0] == "DATABASE_URL=postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge"

@@ -34,8 +34,8 @@ jobs:
         env:
           DATABASE_URL: postgresql+psycopg://signalforge:signalforge@postgres:5432/signalforge
           REDIS_URL: redis://redis:6379/0
-          ARTIFACTS_DIR: ${{ secrets.ARTIFACTS_DIR }}
-          RQ_QUEUE_NAME: ${{ secrets.RQ_QUEUE_NAME }}
+          ARTIFACTS_DIR: artifacts
+          RQ_QUEUE_NAME: signalforge
         run: python -m sentinelqa.ci.write_env --path .env
 
       - name: Build images
