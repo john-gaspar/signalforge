@@ -1,9 +1,58 @@
 import json
+import os
 import time
 from pathlib import Path
 
 from app.core.config import settings
 from app.pipeline.stages_stub import load_fixture_events, cluster_stub, summarize_stub, alert_stub
+from app.sources.tickets import FixtureTicketSource, ZendeskTicketSource, Ticket
+
+def _ticket_limit() -> int:
+    try:
+        return int(os.getenv("TICKET_LIMIT", "100"))
+    except ValueError:
+        return 100
+
+
+def _select_ticket_source(config: dict):
+    source_type = os.getenv("TICKET_SOURCE", "fixtures").lower()
+    fixtures_dir = Path(config.get("fixtures_dir", "fixtures/tickets"))
+    if source_type == "zendesk":
+        return ZendeskTicketSource()
+    return FixtureTicketSource(fixtures_dir)
+
+
+def _write_tickets_artifact(run_dir: Path, tickets: list[Ticket]) -> None:
+    payload = {
+        "version": 1,
+        "tickets": [
+            {
+                "id": t.id,
+                "subject": t.subject,
+                "description": t.description,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at,
+                "tags": t.tags,
+                "status": t.status,
+            }
+            for t in tickets
+        ],
+    }
+    (run_dir / "tickets.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _tickets_to_raw_events(tickets: list[Ticket]) -> list[dict]:
+    return [
+        {
+            "customer": "unknown",
+            "subject": t.subject,
+            "body": t.description,
+            "created_at": t.created_at,
+            "raw_file": "tickets.json",
+        }
+        for t in tickets
+    ]
+
 
 def run_pipeline(run_id: str, config: dict) -> dict:
     """
@@ -17,7 +66,11 @@ def run_pipeline(run_id: str, config: dict) -> dict:
 
     t0 = time.perf_counter()
 
-    events = load_fixture_events(config=config, run_dir=run_dir)
+    ticket_source = _select_ticket_source(config)
+    tickets = ticket_source.fetch(limit=_ticket_limit())
+    _write_tickets_artifact(run_dir, tickets)
+
+    events = load_fixture_events(config=config, run_dir=run_dir, raw_tickets=_tickets_to_raw_events(tickets))
     clusters = cluster_stub(events=events, run_dir=run_dir)
     summary = summarize_stub(clusters=clusters, run_dir=run_dir)
     alert = alert_stub(summary=summary, run_dir=run_dir)

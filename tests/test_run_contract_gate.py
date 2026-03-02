@@ -18,6 +18,24 @@ def _timestamps():
 
 def _write_artifacts(run_dir: Path, run_id: str) -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "tickets.json").write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "tickets": [
+                    {
+                        "id": "t1",
+                        "subject": "s",
+                        "description": "d",
+                        "created_at": "now",
+                        "updated_at": "now",
+                        "tags": [],
+                        "status": "open",
+                    }
+                ],
+            }
+        )
+    )
     (run_dir / "events.json").write_text(json.dumps([{"event_id": "e1"}]))
     (run_dir / "clusters.json").write_text(json.dumps([{"cluster_id": "c1"}]))
     (run_dir / "summary.json").write_text(json.dumps({"summary": "ok"}))

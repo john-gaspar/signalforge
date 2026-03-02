@@ -10,7 +10,7 @@ from typing import Dict, Tuple
 from sentinelqa.artifacts.manifest import write_manifest
 from sentinelqa.ci import seed_run
 
-REQUIRED_FILES = ["events.json", "clusters.json", "summary.json", "alert.json", "metrics.json"]
+REQUIRED_FILES = ["tickets.json", "events.json", "clusters.json", "summary.json", "alert.json", "metrics.json"]
 
 
 def _artifacts_root(arg: str | None) -> Path:

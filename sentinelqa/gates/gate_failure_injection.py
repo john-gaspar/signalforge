@@ -50,7 +50,11 @@ def _scenario_artifact_tamper(run_id: str, run_dir: Path) -> Dict[str, str]:
         # ensure manifest exists; create if missing
         manifest_path = tmp_run_dir / "manifest.json"
         if not manifest_path.exists():
-            write_manifest(tmp_run_dir, run_id, ["events.json", "clusters.json", "summary.json", "alert.json", "metrics.json"])
+            write_manifest(
+                tmp_run_dir,
+                run_id,
+                ["tickets.json", "events.json", "clusters.json", "summary.json", "alert.json", "metrics.json"],
+            )
         # tamper a file
         events_path = tmp_run_dir / "events.json"
         if events_path.exists():
