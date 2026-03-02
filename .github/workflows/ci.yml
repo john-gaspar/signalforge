@@ -92,8 +92,20 @@ jobs:
           test -s artifacts/latest_seed_run_id
           docker compose run --rm api python -m sentinelqa.gates.runner
 
+      - name: CI diagnosis
+        if: always()
+        run: docker compose run --rm -T api python -m sentinelqa.ci.diagnose_ci
+
       - name: Run tests
         run: docker compose run --rm api pytest
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: artifacts/**
+          retention-days: 7
 
       - name: Stop services
         if: always()

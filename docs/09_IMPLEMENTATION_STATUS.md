@@ -18,6 +18,7 @@ CI integration — ✅ Implemented
 Run contract gate — ✅ Implemented  
 Evidence diff gate — ✅ Implemented (informational; writes evidence_diff.json)  
 Baseline/contract change guard — ✅ Implemented (CI blocks unless BASELINE_UPDATE=1)  
+CI diagnosis + artifacts upload — ✅ Implemented (always prints run summary and uploads artifacts/)  
 
 ---
 

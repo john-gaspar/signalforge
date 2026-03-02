@@ -28,6 +28,7 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) — **implemented**, enforces legal run status progression plus required artifacts and bench report presence for completed runs.
 - Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) — **implemented**, informational comparison of manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json` in the run directory.
 - Baseline change guard (`sentinelqa/ci/check_baseline_changes.py`) — **implemented**, CI fails if baselines/schemas/contracts change unless `BASELINE_UPDATE=1`.
+- CI diagnosis (`sentinelqa/ci/diagnose_ci.py`) — **implemented**, always prints seeded run summary and uploads artifacts/ on CI for debugging.
 
 ## CI/CD (see .github/workflows/ci.yml)
 1) Baseline guard blocks baseline/schema/contract edits unless `BASELINE_UPDATE=1`  
@@ -43,9 +44,11 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 11) Metrics gate  
 12) Schema compatibility + artifact schema gates  
 13) Evidence diff gate (informational)  
-14) Run contract + manifest integrity + SLO gates  
-15) Pytest  
-16) Down services  
+14) CI diagnosis summary (sentinelqa.ci.diagnose_ci)  
+15) Run contract + manifest integrity + SLO gates  
+16) Pytest  
+17) Upload artifacts directory for debugging  
+18) Down services  
 
 Manual baseline updates: `update_baselines.yml` workflow_dispatch runs full compose pipeline and calls `python -m sentinelqa.ci.regenerate_baselines --update-bench-baseline`, uploading artifacts for review.  
 Actionlint lint job uses docker image `rhysd/actionlint:1.7.0`.

@@ -50,6 +50,7 @@ All `artifacts/*` paths are gitignored (.gitignore line 13).
 - Diagnose CLI (`sentinelqa/cli/diagnose.py`) summarizes run evidence (gates, manifest, schema, SLO, replay) for triage.
 - Evidence diff gate (`sentinelqa/gates/gate_evidence_diff.py`) compares run manifest/schema/bench evidence against baseline bundle `sentinelqa/baselines/evidence/*`, writes `evidence_diff.json`, recorded as informational gate in the runner order.
 - Baseline governance: CI blocks edits to baselines/schemas/contracts via `sentinelqa/ci/check_baseline_changes.py` unless `BASELINE_UPDATE=1`; manual `update_baselines.yml` workflow regenerates evidence bundle and optional bench baseline.
+- PR CI always prints seeded-run diagnosis (`sentinelqa/ci/diagnose_ci.py`) and uploads `artifacts/` for postmortem debugging.
 
 ## Known Constraints
 - perf.yml runs on schedule/manual, not on PR CI.
