@@ -2,12 +2,41 @@
 
 [![CI](https://github.com/john-gaspar/signalforge/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/john-gaspar/signalforge/actions/workflows/ci.yml) [![Perf](https://github.com/john-gaspar/signalforge/actions/workflows/perf.yml/badge.svg?branch=main)](https://github.com/john-gaspar/signalforge/actions/workflows/perf.yml)
 
+---
+
+## Why this exists
+
+AI systems rarely fail loudly.  
+They degrade silently — through drift, schema changes, latency creep, cost growth, or subtle lifecycle edge cases.
+
+SignalForge encodes those risks into enforceable contracts.
+
+This repository is a practical exploration of what it means to *own reliability* for AI-style systems:
+
+- Can you replay runs deterministically?  
+- Can you prove artifacts haven’t changed shape?  
+- Can you detect quality regression before it ships?  
+- Can you enforce cost and latency budgets automatically?  
+- Can you reason about system state transitions formally?
+
+If the answer is not enforced in CI, it doesn’t count.
+
+---
+
 ## What this proves
-- Deterministic replay pipeline
-- Artifact contract enforcement (schema gate)
-- Baseline-controlled drift detection
-- CI-enforced reliability gates (graph, bench, DQ, metrics)
-- Scheduled performance enforcement
+
+SignalForge demonstrates system-level ownership of AI reliability — beyond testing and into governance:
+
+- Deterministic replay with cryptographic artifact fingerprinting
+- Baseline-controlled regression governance (drift + benchmark enforcement)
+- CI-enforced reliability gates across schema, graph, metrics, and SLO domains
+- Explicit run lifecycle state machine with contract validation
+- Error-budget thinking applied to quality, latency, and cost
+- Production-style failure injection and invariant enforcement
+
+This repository is designed to show system-level reliability engineering — not surface-level automation.
+
+This project is intentionally opinionated. It prioritises determinism, invariants, and enforceable boundaries over feature velocity.
 
 ## Architecture
 
@@ -113,30 +142,59 @@ flowchart LR
 | Manifest integrity | Hashes + fingerprint of artifacts | CI (runner), Local | `docker compose run --rm api python -m sentinelqa.gates.gate_manifest_integrity` | Manifest/file hash mismatch |
 | SLO | Run metadata completeness + duration budget | CI (runner), Local | `docker compose run --rm api python -m sentinelqa.gates.gate_slo` | SLO/metadata missing |
 
+## Intentional Quick Start
+
+This quick start is not just about running the system.  
+It demonstrates deterministic replay + CI parity.
+
+The goal is to:  
+1. Start infrastructure  
+2. Execute a replayed run  
+3. Validate artifact fingerprint stability  
+4. Verify gates would pass in CI
+
+### 1️⃣ Build and start infrastructure
+
+```bash
+docker compose build
+docker compose up -d postgres redis neo4j
+```
+
+### 2️⃣ Apply schema (authoritative via Alembic)
+
+```bash
+docker compose run --rm api alembic upgrade head
+```
+
+### 3️⃣ Start API + worker
+
+```bash
+docker compose up -d api worker
+```
+
+### 4️⃣ Seed a deterministic run (CI parity path)
+
+```bash
+docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
+```
+
+### 5️⃣ Verify deterministic fingerprint
+
+```bash
+python -m sentinelqa.cli.diagnose --run-id <run_id> --artifacts-dir artifacts
+```
+
+If replayed with identical configuration, the fingerprint must remain identical.
+
+Non-determinism is treated as a reliability violation.
+
+---
+
 ## Determinism & baselines
 - Artifacts live under `artifacts/runs/<run_id>/`; manifest.json captures per-file hashes and a fingerprint for determinism.
 - Baselines: `sentinelqa/baselines/bench_baseline.json`, `sentinelqa/baselines/drift_baseline.json`, `sentinelqa/baselines/load_baseline.json` (perf). Thresholds/tolerances are explicit; changes must be intentional.
 - Gate runner (`python -m sentinelqa.gates.runner`) executes the ledgered gate order and writes `gates.json` alongside artifacts for auditability.
 
-## Deterministic fingerprint example
-
-Commands (local CI-parity):
-```bash
-docker compose build
-docker compose up -d postgres redis neo4j
-docker compose run --rm api alembic upgrade head
-docker compose up -d api worker
-docker compose run --rm api python -m sentinelqa.ci.seed_run --base-url http://api:8000
-python -m sentinelqa.cli.diagnose --run-id 80294c1eaa340d4262d8e8ddd3c57879 --artifacts-dir artifacts
-```
-
-Sample output (real run):
-```
-Run: 80294c1eaa340d4262d8e8ddd3c57879
-Manifest: fingerprint=b24a7d79c19a1d4dec5db20b2b7f3ea206ef9ae265bc3b07034eeefa11c48e0b files=5
-Evidence files:
-- artifacts/runs/80294c1eaa340d4262d8e8ddd3c57879/manifest.json
-```
 
 ## Security Notes
 - .env is never committed; it is generated via `python -m sentinelqa.ci.write_env --path .env`.
