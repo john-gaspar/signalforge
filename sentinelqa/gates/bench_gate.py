@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from sentinelqa.bench.run import run_benchmark
+from sentinelqa.ci.bench_history import append_bench_history
 
 
 def repo_root() -> Path:
@@ -51,6 +52,11 @@ def main() -> None:
 
     baseline = load_json(baseline_path)
     current = load_json(result_path)
+
+    artifacts_root = Path(os.getenv("ARTIFACTS_DIR", repo_root() / "artifacts"))
+    history_path_env = os.getenv("BENCH_HISTORY_PATH")
+    history_path = Path(history_path_env) if history_path_env else artifacts_root / "bench" / "history.jsonl"
+    append_bench_history(result_path, history_path)
 
     errors = compare(baseline, current)
     if errors:

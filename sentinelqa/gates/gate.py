@@ -17,6 +17,11 @@ def main():
     failures = []
 
     for key, rule in thresholds.items():
+        if not isinstance(rule, dict):
+            continue
+        if "max" not in rule and "min" not in rule:
+            # Config sections (e.g., trend) are ignored by this gate.
+            continue
         if key not in metrics:
             failures.append(f"Missing metric: {key}")
             continue

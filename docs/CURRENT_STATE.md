@@ -22,7 +22,8 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
   - Artifact structural checks (non-empty events, unique event_id, metrics keys).
   - DB invariant: run exists and succeeded (skips if DB unavailable or not Postgres).
   - Drift detection: compares artifact-derived summaries to baseline (`sentinelqa/baselines/drift_baseline.json`) with numeric/distribution tolerances; default warn locally, fail in CI. Uses `artifacts/latest_seed_run_id` if present, else latest run directory.
-- Benchmark gate (`sentinelqa/gates/bench_gate.py`) — **implemented**, enforces pass rate, p95 latency, and F1 thresholds from `sentinelqa/baselines/bench_baseline.json`; will auto-run benchmark if `artifacts/bench/latest.json` is absent.
+- Benchmark gate (`sentinelqa/gates/bench_gate.py`) — **implemented**, enforces pass rate, p95 latency, and F1 thresholds from `sentinelqa/baselines/bench_baseline.json`; will auto-run benchmark if `artifacts/bench/latest.json` is absent and records results to `artifacts/bench/history.jsonl`.
+- Trend regression gate (`sentinelqa/gates/gate_trend_regression.py`) — **implemented**, checks linear slopes across recent bench history (F1, pass_rate, p95 latency) with configurable trend thresholds in `sentinelqa/gates/thresholds.yaml`.
 - Graph gate (`sentinelqa/gates/graph_gate.py`) — **implemented**, persists stable artifact fields to Neo4j then enforces run/event/cluster edge invariants; waits for Neo4j readiness internally.
 - Load gate (`sentinelqa/gates/load_gate.py`) — **implemented**, enforces Locust-based load thresholds using `artifacts/load/latest.json` and baseline `sentinelqa/baselines/load_baseline.json`; only runs in perf workflow/manual.
 - Run Contract gate (`sentinelqa/gates/gate_run_contract.py`) — **implemented**, enforces legal run status progression plus required artifacts and bench report presence for completed runs.
@@ -39,16 +40,17 @@ Single-page snapshot for external LLM agents. For the canonical checklist see do
 6) Wait for api health (pure-Python, 180s timeout)  
 7) Seed run via API (http://api:8000/runs/replay) and record run id  
 8) Graph invariants gate (Neo4j)  
-9) Benchmark run + gate (golden fixtures vs baseline; generates `artifacts/bench/latest.json` if missing)  
-10) Data Quality gate (includes drift)  
-11) Metrics gate  
-12) Schema compatibility + artifact schema gates  
-13) Evidence diff gate (informational)  
-14) CI diagnosis summary (sentinelqa.ci.diagnose_ci)  
-15) Run contract + manifest integrity + SLO gates  
-16) Pytest  
-17) Upload artifacts directory for debugging  
-18) Down services  
+9) Benchmark run + gate (golden fixtures vs baseline; generates `artifacts/bench/latest.json` if missing and appends to `artifacts/bench/history.jsonl`)  
+10) Trend regression gate (bench history slope checks)  
+11) Data Quality gate (includes drift)  
+12) Metrics gate  
+13) Schema compatibility + artifact schema gates  
+14) Evidence diff gate (informational)  
+15) CI diagnosis summary (sentinelqa.ci.diagnose_ci)  
+16) Run contract + manifest integrity + SLO gates  
+17) Pytest  
+18) Upload artifacts directory for debugging  
+19) Down services  
 
 Manual baseline updates: `update_baselines.yml` workflow_dispatch runs full compose pipeline and calls `python -m sentinelqa.ci.regenerate_baselines --update-bench-baseline`, uploading artifacts for review.  
 Actionlint lint job uses docker image `rhysd/actionlint:1.7.0`.
@@ -56,7 +58,7 @@ Actionlint lint job uses docker image `rhysd/actionlint:1.7.0`.
 ## Performance / Load (separate workflow perf.yml)
 - Runs on schedule + manual dispatch, not on PRs.
 - Uses Locust headless (defaults: users=5, spawn_rate=1, duration=60s) against `/runs/replay` with fixtures `fixtures/tickets`.
-- Generates `artifacts/load/latest.json` and enforces thresholds via load gate; uploads report as artifact.
+- Generates `artifacts/load/latest.json` and enforces thresholds via load gate; uploads report as artifact. Benchmark results are appended to `artifacts/bench/history.jsonl` for trend regression gate evaluation.
 
 ## Endpoints
 - `/runs/replay` — enqueue deterministic pipeline run; idempotent by config hash.
