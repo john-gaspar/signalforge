@@ -60,6 +60,10 @@ jobs:
           test -s artifacts/latest_seed_run_id
           docker compose run --rm -T api python -m sentinelqa.gates.runner
 
+      - name: Create run capsule
+        if: always()
+        run: docker compose run --rm -T api python -m sentinelqa.cli.run_capsule pack
+
       - name: Dump compose logs on failure
         if: failure()
         run: |
