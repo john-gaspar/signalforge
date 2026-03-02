@@ -59,7 +59,7 @@ def test_tickets_written_but_events_from_fixtures(tmp_path, monkeypatch):
     from app.sources.tickets import FixtureTicketSource as _FTS
     monkeypatch.setenv("TICKET_SOURCE", "fixtures")
     monkeypatch.setenv("TICKET_LIMIT", "10")
-    monkeypatch.setattr(run_pipeline, "FixtureTicketSource", lambda *_args, **_kwargs: _FTS(tickets_path))
+    monkeypatch.setenv("TICKETS_FIXTURES_PATH", str(tickets_path))
 
     run_id = "run1"
     run_pipeline.run_pipeline(run_id, {"fixtures_dir": str(fixtures_dir)})

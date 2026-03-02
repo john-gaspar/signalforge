@@ -16,10 +16,11 @@ def _ticket_limit() -> int:
 
 def _select_ticket_source(config: dict):
     source_type = os.getenv("TICKET_SOURCE", "fixtures").lower()
-    fixtures_dir = Path(config.get("fixtures_dir", "fixtures/tickets"))
+    fixtures_path_env = os.getenv("TICKETS_FIXTURES_PATH")
+    fixtures_path = Path(fixtures_path_env) if fixtures_path_env else Path("fixtures/zendesk/v1/tickets_v1.json")
     if source_type == "zendesk":
         return ZendeskTicketSource()
-    return FixtureTicketSource(fixtures_dir)
+    return FixtureTicketSource(fixtures_path)
 
 
 def _write_tickets_artifact(run_dir: Path, tickets: list[Ticket]) -> None:
